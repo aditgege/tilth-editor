@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TILTH — AI Asset Preparation Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body class="mode-source">
+    <header>
+      <div class="brand">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+          <polygon
+            points="12,2 22,12 12,22 2,12"
+            fill="none"
+            stroke="#a8ca6c"
+            stroke-width="1.6"
+          />
+          <polygon
+            points="12,7.5 16.5,12 12,16.5 7.5,12"
+            fill="#a8ca6c"
+            opacity=".9"
+          />
+        </svg>
+        <div class="brand-t">
+          <strong>TILTH</strong
+          ><span>ai asset preparation · virtual garden</span>
+        </div>
+      </div>
+      <div class="modeswitch">
+        <button id="modeSource" class="on">Source</button>
+        <button id="modeTemplate">Template</button>
+        <button id="modeInspect">Inspect</button>
+      </div>
+      <div class="top-actions">
+        <button class="btn sm" id="btnNew" title="Project baru">
+          <i data-lucide="file-plus"></i>New
+        </button>
+        <button class="btn sm" id="btnOpen" title="Buka project .tilth.json">
+          <i data-lucide="folder-open"></i>Open
+        </button>
+        <button class="btn sm" id="btnSave" title="Simpan project">
+          <i data-lucide="save"></i>Save
+        </button>
+        <button class="btn" id="btnImport">
+          <i data-lucide="upload"></i>Import
+        </button>
+        <button class="btn" id="btnSample">
+          <i data-lucide="sparkles"></i>Sample
+        </button>
+        <button class="btn primary" id="btnExport">
+          <i data-lucide="download"></i>Export tileset
+        </button>
+      </div>
+    </header>
+
+    <nav id="toolbar">
+      <div class="tb-group only-source">
+        <button
+          class="tbtn on"
+          data-tool="hand"
+          title="Pan / geser — V atau tahan Spasi"
+        >
+          <i data-lucide="hand"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-tool="calib"
+          title="Kalibrasi 4-point — klik 4 vertex diamond (C)"
+        >
+          <i data-lucide="ruler"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-tool="select"
+          title="Select multi-diamond — klik toggle, drag marquee (S)"
+        >
+          <i data-lucide="box-select"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-tool="tile"
+          title="Crop tile — klik diamond (T)"
+        >
+          <i data-lucide="diamond"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-tool="patch"
+          title="Crop patch — drag antar diamond (P)"
+        >
+          <i data-lucide="scan"></i>
+        </button>
+        <button class="tbtn" data-tool="origin" title="Set origin grid — O">
+          <i data-lucide="crosshair"></i>
+        </button>
+      </div>
+      <div class="tb-group only-template">
+        <button
+          class="tbtn on"
+          data-ttool="paint"
+          title="Isi material — klik / drag (B)"
+        >
+          <i data-lucide="brush"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-ttool="erase"
+          title="Kosongkan cell — atau klik kanan (E)"
+        >
+          <i data-lucide="eraser"></i>
+        </button>
+        <button class="tbtn" data-ttool="fill" title="Isi satu zona utuh (F)">
+          <i data-lucide="paint-bucket"></i>
+        </button>
+      </div>
+      <div class="tb-group only-inspect">
+        <button class="tbtn on" data-ptool="brush" title="Brush — B">
+          <i data-lucide="brush"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-ptool="erase"
+          title="Eraser — E atau klik kanan"
+        >
+          <i data-lucide="eraser"></i>
+        </button>
+      </div>
+      <div class="tb-sep"></div>
+      <button class="tbtn" id="tbZoomOut" title="Zoom out (−)">
+        <i data-lucide="zoom-out"></i>
+      </button>
+      <button class="tbtn" id="tbZoomIn" title="Zoom in (+)">
+        <i data-lucide="zoom-in"></i>
+      </button>
+      <button class="tbtn" id="tbFit" title="Fit to screen (0)">
+        <i data-lucide="maximize"></i>
+      </button>
+      <button class="tbtn only-source" id="tbGrid" title="Show / hide grid (G)">
+        <i data-lucide="grid-3x3"></i>
+      </button>
+      <div class="tb-sep only-inspect"></div>
+      <div class="tb-group only-inspect">
+        <button class="tbtn dis" id="tbUndo" title="Undo — Ctrl+Z">
+          <i data-lucide="undo-2"></i>
+        </button>
+        <button class="tbtn dis" id="tbRedo" title="Redo — Ctrl+Y">
+          <i data-lucide="redo-2"></i>
+        </button>
+        <button class="tbtn" id="tbClear" title="Bersihkan preview">
+          <i data-lucide="trash-2"></i>
+        </button>
+      </div>
+      <div class="tb-sep only-template"></div>
+      <div class="tb-group only-template">
+        <button class="tbtn dis" id="tbTUndo" title="Undo — Ctrl+Z">
+          <i data-lucide="undo-2"></i>
+        </button>
+        <button class="tbtn dis" id="tbTRedo" title="Redo — Ctrl+Y">
+          <i data-lucide="redo-2"></i>
+        </button>
+        <button class="tbtn" id="tbTClear" title="Kosongkan semua zona">
+          <i data-lucide="trash-2"></i>
+        </button>
+      </div>
+    </nav>
+
+    <section id="stage">
+      <canvas id="cvSrc"></canvas>
+      <canvas id="cvTmpl" class="hidden"></canvas>
+      <canvas id="cvPrev" class="hidden"></canvas>
+      <div id="prevEmpty" class="hidden"></div>
+      <div id="dropzone">
+        <i data-lucide="image" class="big"></i>
+        <h2>Tarik &amp; lepas gambar AI di sini</h2>
+        <p>
+          PNG / JPG / WebP — master diorama, atlas, atau tilesheet yang sudah
+          ada
+        </p>
+        <div class="dz-actions">
+          <button class="btn" id="dzPick">
+            <i data-lucide="upload"></i>Pilih gambar
+          </button>
+          <button class="btn" id="dzSample">
+            <i data-lucide="sparkles"></i>Buat sample diorama
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <aside id="inspector">
+      <!-- ============ PANEL SOURCE ============ -->
+      <div class="only-source">
+        <section>
+          <h3>Source</h3>
+          <div class="kv">
+            <span class="k">file</span><span class="v" id="ivFile">—</span>
+          </div>
+          <div class="kv">
+            <span class="k">size</span><span class="v" id="ivSize">—</span>
+          </div>
+          <div class="kv">
+            <span class="k">color</span><span class="v" id="ivColor">—</span>
+          </div>
+          <div class="kv">
+            <span class="k">alpha</span><span class="v" id="ivAlpha">—</span>
+          </div>
+          <div class="kv">
+            <span class="k">file size</span
+            ><span class="v" id="ivBytes">—</span>
+          </div>
+          <p class="hint info" id="ivNote" hidden>
+            Tanpa alpha channel — bisa diterima untuk master ground (mask
+            diamond tetap dihasilkan saat crop).
+          </p>
+        </section>
+
+        <section>
+          <h3>Grid isometric</h3>
+          <div class="frow2">
+            <label class="field"
+              ><span>Diamond width</span
+              ><input type="number" id="inGW" value="256" min="4" step="1"
+            /></label>
+            <label class="field"
+              ><span>Diamond height</span
+              ><input type="number" id="inGH" value="128" min="2" step="1"
+            /></label>
+          </div>
+          <label class="check"
+            ><input type="checkbox" id="inLock" checked /><i class="box"></i
+            >Kunci rasio 2:1</label
+          >
+          <div class="chips">
+            <button class="chip" data-gw="128" data-gh="64">128×64</button>
+            <button class="chip" data-gw="256" data-gh="128">
+              256×128? no — 256×128
+            </button>
+            <button class="chip" data-gw="512" data-gh="256">
+              512×256? no — 512×256
+            </button>
+          </div>
+          <div class="frow2">
+            <label class="field"
+              ><span>Origin X</span
+              ><input type="number" id="inOX" value="0" step="1"
+            /></label>
+            <label class="field"
+              ><span>Origin Y</span
+              ><input type="number" id="inOY" value="0" step="1"
+            /></label>
+          </div>
+          <p class="hint warn" id="ratioWarn" hidden>
+            Rasio source diamond bukan 2:1 — jika dipaksa ke output, bentuk akan
+            terdistorsi.
+          </p>
+          <div class="btnrow" style="margin-top: 10px">
+            <button class="btn sm wide" id="btnCalib">
+              <i data-lucide="ruler"></i>4-point calibration (C)
+            </button>
+          </div>
+          <div class="btnrow">
+            <button class="btn sm wide" id="btnManifest">
+              <i data-lucide="file-json"></i>Import manifest JSON
+            </button>
+          </div>
+          <p class="hint tight">
+            Kalibrasi: klik 4 vertex SATU diamond pada gambar — atas → kanan →
+            bawah → kiri. Editor menghitung ukuran + origin lattice yang paling
+            pas.
+          </p>
+        </section>
+
+        <section>
+          <h3>Selection</h3>
+          <div class="kv">
+            <span class="k">terpilih</span
+            ><span class="v" id="kvSel">0 cell</span>
+          </div>
+          <label class="field" style="margin-bottom: 8px"
+            ><span>Name prefix</span
+            ><input type="text" id="selPrefix" value="tile" spellcheck="false"
+          /></label>
+          <div class="btnrow">
+            <button class="btn sm dis" id="btnCropSel">
+              <i data-lucide="check-check"></i>Crop 0 → library
+            </button>
+            <button class="btn sm" id="btnClearSel">Clear</button>
+          </div>
+          <p class="hint">
+            Tool <em>Select</em> (S): klik = toggle cell, drag = marquee.
+            <em>Enter</em> = crop semua, <em>Esc</em> = bersihkan. Ideal untuk
+            satu material master → banyak varian.
+          </p>
+        </section>
+
+        <section>
+          <h3>Crop &amp; processing</h3>
+          <div class="frow2">
+            <label class="field"
+              ><span>Output width</span
+              ><input type="number" id="inOW" value="64" min="8" step="1"
+            /></label>
+            <label class="field"
+              ><span>Output height</span
+              ><input type="number" id="inOH" value="32" min="4" step="1"
+            /></label>
+          </div>
+          <div class="chips">
+            <button class="chip" data-ow="64" data-oh="32">64 × 32</button>
+            <button class="chip" data-ow="96" data-oh="48">96 × 48</button>
+            <button class="chip" data-ow="128" data-oh="64">128 × 64</button>
+          </div>
+          <div class="field" style="margin-bottom: 10px">
+            <span>Resample</span>
+            <div class="seg" id="segResample">
+              <button data-v="nearest" class="on">Nearest</button>
+              <button data-v="average">Average</button>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom: 10px">
+            <span>Background removal</span>
+            <div class="seg" id="segBg">
+              <button data-v="none" class="on">None</button>
+              <button data-v="black">Near black</button>
+              <button data-v="white">Near white</button>
+            </div>
+          </div>
+          <div class="frow2">
+            <label class="field"
+              ><span>BG tolerance</span
+              ><input type="number" id="inBgTol" value="24" min="0" max="128"
+            /></label>
+            <label class="field"
+              ><span>Alpha threshold</span
+              ><input type="number" id="inATh" value="0" min="0" max="254"
+            /></label>
+          </div>
+          <label class="check"
+            ><input type="checkbox" id="inBinA" /><i class="box"></i>Biner-kan
+            alpha (pixel art crisp)</label
+          >
+          <p class="hint warn tight">
+            BG removal hanya untuk source ber-background solid (sprite/objek).
+            Master ground full-bleed: biarkan <em>None</em> — mask diamond sudah
+            menanganinya.
+          </p>
+          <div class="liveprev">
+            <div class="lp-head">
+              <span>Live crop preview</span
+              ><span class="mono" id="lpCell">—</span>
+            </div>
+            <canvas id="cvLive" width="520" height="260"></canvas>
+          </div>
+          <p class="hint">
+            Pipeline: crop → resize → BG removal → diamond mask → alpha cleanup.
+            Tool <em>Crop tile</em> (T) untuk tile 64×32, <em>Patch</em> (P)
+            untuk sprite ground besar.
+          </p>
+        </section>
+      </div>
+
+      <!-- ============ PANEL TEMPLATE ============ -->
+      <div class="only-template">
+        <section>
+          <h3>Template canvas</h3>
+          <div class="field" style="margin-bottom: 10px">
+            <span>Preset ukuran AI</span>
+            <div class="seg" id="segTPreset">
+              <button data-w="1536" data-h="1024">1536×1024</button>
+              <button data-w="1024" data-h="1024">1024²</button>
+              <button data-w="1344" data-h="768">1344×768</button>
+              <button data-w="1920" data-h="1080">1920×1080</button>
+            </div>
+          </div>
+          <div class="frow2">
+            <label class="field"
+              ><span>Width</span
+              ><input
+                type="number"
+                id="inTW"
+                value="1536"
+                min="256"
+                max="4096"
+                step="1"
+            /></label>
+            <label class="field"
+              ><span>Height</span
+              ><input
+                type="number"
+                id="inTH"
+                value="1024"
+                min="256"
+                max="4096"
+                step="1"
+            /></label>
+          </div>
+          <div class="frow2">
+            <label class="field"
+              ><span>Columns</span
+              ><input type="number" id="inTCols" value="8" min="2" max="24"
+            /></label>
+            <label class="field"
+              ><span>Rows</span
+              ><input type="number" id="inTRows" value="6" min="2" max="24"
+            /></label>
+          </div>
+          <div class="frow2">
+            <label class="field"
+              ><span>Diamond height</span
+              ><input type="number" id="inTDH" value="52" min="4" step="1"
+            /></label>
+            <label class="field"
+              ><span>Diamond width</span
+              ><input type="number" id="inTDW" value="104" readonly
+            /></label>
+          </div>
+          <div class="kv">
+            <span class="k">origin</span><span class="v" id="kvTOrigin">—</span>
+          </div>
+          <p class="hint tight">
+            Diamond <em>auto</em> dihitung agar grid iso 2:1 maksimal muat di
+            kanvas — ubah cols/rows untuk mengubah ukurannya.
+          </p>
+        </section>
+
+        <section>
+          <h3>Zone layout</h3>
+          <div class="field" style="margin-bottom: 10px">
+            <span>Preset layout</span>
+            <div class="seg" id="segTLayout">
+              <button data-l="garden" class="on">Garden</button>
+              <button data-l="grass">All grass</button>
+              <button data-l="blank">Blank</button>
+            </div>
+          </div>
+          <div class="swatches" id="tPalette"></div>
+          <label class="check"
+            ><input type="checkbox" id="inTLabels" checked /><i class="box"></i
+            >Label nama material di tiap zona</label
+          >
+          <label class="check" style="margin-bottom: 0"
+            ><input type="checkbox" id="inTBorders" checked /><i class="box"></i
+            >Tebalkan batas antar zona</label
+          >
+        </section>
+
+        <section>
+          <h3>Export untuk AI — pendekatan A</h3>
+          <div class="kv">
+            <span class="k">zona terisi</span
+            ><span class="v" id="kvTZones">—</span>
+          </div>
+          <div class="btnrow">
+            <button class="btn sm" id="btnExportZones">
+              <i data-lucide="download"></i>Zone map PNG
+            </button>
+            <button class="btn sm" id="btnCopyPZ">
+              <i data-lucide="clipboard-copy"></i>Copy prompt
+            </button>
+          </div>
+          <p class="hint tight">
+            Untuk AI yang menerima gambar referensi (GPT-image, Nano Banana,
+            Flux Kontext, img2img): zona warna + label → AI mengisi tekstur.
+          </p>
+          <div class="btnrow">
+            <button class="btn sm" id="btnExportLines">
+              <i data-lucide="download"></i>Grid lines PNG
+            </button>
+            <button class="btn sm" id="btnCopyPL">
+              <i data-lucide="clipboard-copy"></i>Copy prompt
+            </button>
+          </div>
+          <p class="hint tight">
+            Line art untuk ControlNet Lineart / Canny — boundary zona lebih
+            tebal dari garis grid.
+          </p>
+          <button
+            class="btn primary wide"
+            id="btnExportTemplate"
+            style="margin-top: 4px"
+          >
+            <i data-lucide="download"></i>Export semua (4 file)
+          </button>
+          <p class="hint" style="margin-top: 10px">
+            Zone map + grid lines + <em>manifest JSON</em> + prompt txt.
+            Manifest di-import di mode Source agar grid nempel presisi di hasil
+            AI.
+          </p>
+        </section>
+
+        <section>
+          <h3>Prompt preset — pendekatan B</h3>
+          <p class="hint tight">
+            Satu material per generate → banyak varian tile. Lebih mudah bagi
+            AI, lebih konsisten bagi library.
+          </p>
+          <div class="field" style="margin-bottom: 8px">
+            <span>Material</span>
+            <select id="pmMat">
+              <option value="grass">Grass</option>
+              <option value="soil">Soil</option>
+              <option value="path">Path</option>
+              <option value="water">Water</option>
+              <option value="stone">Stone</option>
+              <option value="sand">Sand</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom: 8px">
+            <span>Custom deskripsi (opsional)</span
+            ><input
+              type="text"
+              id="pmCustom"
+              placeholder="mis. volcanic ash ground, warm grey…"
+              spellcheck="false"
+            />
+          </div>
+          <div class="field" style="margin-bottom: 10px">
+            <span>Style</span>
+            <select id="pmStyle">
+              <option value="pixel">Cozy pixel art</option>
+              <option value="paint">Hand-painted</option>
+              <option value="flat">Clean flat</option>
+              <option value="snes">Retro SNES</option>
+            </select>
+          </div>
+          <button class="btn wide" id="btnGenPrompt">
+            <i data-lucide="sparkles"></i>Generate prompt
+          </button>
+          <textarea
+            id="pmOut"
+            placeholder="Prompt akan muncul di sini…"
+            style="margin-top: 8px"
+            readonly
+          ></textarea>
+          <div class="btnrow" style="margin-top: 8px">
+            <button class="btn sm" id="btnCopyPM">
+              <i data-lucide="clipboard-copy"></i>Copy
+            </button>
+            <button class="btn sm" id="btnDlPM">
+              <i data-lucide="download"></i>Download .txt
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ PANEL INSPECT ============ -->
+      <div class="only-inspect">
+        <section>
+          <h3>Preview grid</h3>
+          <div class="frow2">
+            <label class="field"
+              ><span>Columns</span
+              ><input type="number" id="inPCols" value="12" min="2" max="40"
+            /></label>
+            <label class="field"
+              ><span>Rows</span
+              ><input type="number" id="inPRows" value="12" min="2" max="40"
+            /></label>
+          </div>
+          <label class="check"
+            ><input type="checkbox" id="inPGrid" checked /><i class="box"></i
+            >Tampilkan grid</label
+          >
+          <button class="btn wide" id="btnPrevPng">
+            <i data-lucide="download"></i>Download preview PNG
+          </button>
+        </section>
+
+        <section>
+          <h3>Validation</h3>
+          <ul class="vlist" id="vlist"></ul>
+        </section>
+
+        <section>
+          <h3>Seamless check</h3>
+          <div class="kv">
+            <span class="k">tile aktif</span
+            ><span class="v" id="kvSeamTile">—</span>
+          </div>
+          <div class="seg" id="segSeam">
+            <button data-n="3" class="on">3×3</button>
+            <button data-n="5">5×5</button>
+          </div>
+          <canvas id="cvSeam" class="seamcv" width="272" height="136"></canvas>
+          <p class="hint" style="margin-top: 8px">
+            Tile diulang di lattice iso — periksa apakah edge antar tile menyatu
+            (tanpa seam / bleed).
+          </p>
+        </section>
+
+        <section>
+          <h3>Pixel zoom</h3>
+          <div class="seg" id="segPix">
+            <button data-z="4">400%</button>
+            <button data-z="8" class="on">800%</button>
+            <button data-z="16">1600%</button>
+          </div>
+          <div class="scrollbox" id="pxWrap">
+            <canvas id="cvPixel"></canvas>
+          </div>
+          <p class="hint" style="margin-top: 8px">
+            Nearest-neighbor + grid piksel — scroll untuk memeriksa edge &amp;
+            mask.
+          </p>
+        </section>
+
+        <section>
+          <h3>Brush aktif</h3>
+          <div id="brushBox"></div>
+        </section>
+      </div>
+
+      <!-- ============ LIBRARY (semua mode) ============ -->
+      <section>
+        <h3>Asset library <span class="count" id="libCount">0</span></h3>
+        <div class="lib-tools">
+          <input
+            class="tin"
+            id="libSearch"
+            placeholder="cari nama…"
+            spellcheck="false"
+          />
+          <div class="seg mini" id="libFilter">
+            <button data-f="all" class="on">All</button>
+            <button data-f="tile">Tile</button>
+            <button data-f="patch">Patch</button>
+          </div>
+        </div>
+        <div id="libList"></div>
+      </section>
+    </aside>
+
+    <footer>
+      <div class="stat-l">
+        <span>IMG <b id="stImg">—</b></span
+        ><i>·</i> <span>CUR <b id="stCur">—</b></span
+        ><i>·</i> <span>CELL <b id="stCell">—</b></span
+        ><i>·</i> <span>ZOOM <b id="stZoom">—</b></span
+        ><i>·</i>
+        <span>GRID <b id="stGrid">256×128</b></span>
+      </div>
+      <div class="stat-r" id="stHint"></div>
+    </footer>
+
+    <div id="toasts"></div>
+    <input type="file" id="fileInput" accept="image/*" hidden />
+    <input
+      type="file"
+      id="manifestInput"
+      accept=".json,application/json"
+      hidden
+    />
+    <input type="file" id="projInput" accept=".json,application/json" hidden />
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

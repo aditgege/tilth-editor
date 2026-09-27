@@ -1,0 +1,5194 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TILTH — AI Asset Preparation Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      :root {
+        --bg0: #0d0e11;
+        --bg1: #15171b;
+        --bg2: #1c1f24;
+        --bg3: #24282f;
+        --line: #262a31;
+        --line2: #333944;
+        --tx: #e3e2da;
+        --dim: #8f928b;
+        --faint: #5d615b;
+        --acc: #a8ca6c;
+        --acc-ink: #1a220e;
+        --amber: #efb34a;
+        --cyan: #7fd1d8;
+        --red: #d4725f;
+        --mono: "IBM Plex Mono", ui-monospace, monospace;
+        --ui: "Chakra Petch", sans-serif;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        background: var(--bg0);
+        color: var(--tx);
+        font-family: var(--ui);
+        overflow: hidden;
+        user-select: none;
+        min-width: 1180px;
+        display: grid;
+        grid-template: "hd hd hd" 52px "tb st ins" 1fr "ft ft ft" 26px / 54px 1fr 306px;
+      }
+      svg.lucide {
+        stroke-width: 1.8;
+      }
+      .hidden {
+        display: none !important;
+      }
+      body.mode-source .only-template,
+      body.mode-source .only-inspect {
+        display: none !important;
+      }
+      body.mode-template .only-source,
+      body.mode-template .only-inspect {
+        display: none !important;
+      }
+      body.mode-inspect .only-source,
+      body.mode-inspect .only-template {
+        display: none !important;
+      }
+
+      /* ---------- header ---------- */
+      header {
+        grid-area: hd;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 0 14px;
+        background: var(--bg1);
+        border-bottom: 1px solid var(--line);
+        position: relative;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand-t strong {
+        font-size: 16px;
+        letter-spacing: 0.24em;
+        font-weight: 700;
+      }
+      .brand-t span {
+        display: block;
+        font-size: 10px;
+        color: var(--dim);
+        letter-spacing: 0.07em;
+        margin-top: -2px;
+      }
+      .modeswitch {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        background: var(--bg0);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 3px;
+        gap: 3px;
+      }
+      .modeswitch button {
+        font-family: var(--ui);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        padding: 5px 16px;
+        border: 0;
+        background: transparent;
+        color: var(--dim);
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .modeswitch button.on {
+        background: var(--bg3);
+        color: var(--tx);
+      }
+      .top-actions {
+        margin-left: auto;
+        display: flex;
+        gap: 7px;
+      }
+
+      /* ---------- buttons ---------- */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-family: var(--ui);
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        color: var(--tx);
+        background: var(--bg2);
+        border: 1px solid var(--line2);
+        border-radius: 7px;
+        padding: 7px 13px;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
+      }
+      .btn:hover {
+        background: var(--bg3);
+        border-color: #3d4450;
+      }
+      .btn.primary {
+        background: var(--acc);
+        border-color: var(--acc);
+        color: var(--acc-ink);
+      }
+      .btn.primary:hover {
+        filter: brightness(1.08);
+      }
+      .btn.wide {
+        width: 100%;
+        justify-content: center;
+      }
+      .btn.sm {
+        padding: 5px 9px;
+        font-size: 11.5px;
+      }
+      .btn.dis {
+        opacity: 0.4;
+        pointer-events: none;
+      }
+      .btn svg {
+        width: 15px;
+        height: 15px;
+      }
+      .btn.sm svg {
+        width: 13px;
+        height: 13px;
+      }
+      .btnrow {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+      .btnrow .btn {
+        flex: 1;
+        justify-content: center;
+      }
+
+      /* ---------- toolbar kiri ---------- */
+      #toolbar {
+        grid-area: tb;
+        background: var(--bg1);
+        border-right: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px 0;
+        gap: 6px;
+      }
+      .tbtn {
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        color: var(--dim);
+        cursor: pointer;
+      }
+      .tbtn:hover {
+        color: var(--tx);
+        background: var(--bg2);
+      }
+      .tbtn.on {
+        color: var(--acc);
+        background: rgba(168, 202, 108, 0.1);
+        border-color: rgba(168, 202, 108, 0.35);
+      }
+      .tbtn svg {
+        width: 17px;
+        height: 17px;
+      }
+      .tbtn.dis {
+        opacity: 0.35;
+        pointer-events: none;
+      }
+      .tb-sep {
+        width: 22px;
+        height: 1px;
+        background: var(--line2);
+        margin: 4px 0;
+      }
+
+      /* ---------- stage ---------- */
+      #stage {
+        grid-area: st;
+        position: relative;
+        background: var(--bg0);
+        overflow: hidden;
+      }
+      #stage canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+        display: block;
+      }
+      #stage.drag::after {
+        content: "";
+        position: absolute;
+        inset: 10px;
+        border: 1.5px dashed var(--acc);
+        border-radius: 12px;
+        pointer-events: none;
+        z-index: 9;
+      }
+
+      #dropzone {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        z-index: 5;
+        background: var(--bg0);
+        cursor: pointer;
+      }
+      #dropzone .big {
+        width: 44px;
+        height: 44px;
+        color: var(--faint);
+        margin-bottom: 8px;
+      }
+      #dropzone h2 {
+        font-size: 17px;
+        font-weight: 600;
+      }
+      #dropzone p {
+        font-size: 12.5px;
+        color: var(--dim);
+      }
+      .dz-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      #prevEmpty {
+        position: absolute;
+        left: 50%;
+        top: 44%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: var(--dim);
+        pointer-events: none;
+        z-index: 4;
+      }
+      #prevEmpty strong {
+        display: block;
+        font-size: 14px;
+        color: var(--tx);
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      #prevEmpty span {
+        font-size: 12px;
+      }
+
+      /* ---------- inspector ---------- */
+      #inspector {
+        grid-area: ins;
+        background: var(--bg1);
+        border-left: 1px solid var(--line);
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+      #inspector section {
+        padding: 14px 16px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      #inspector h3 {
+        font-size: 10.5px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--dim);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+      #inspector h3::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        background: var(--acc);
+        transform: rotate(45deg);
+        flex: none;
+      }
+      #inspector h3 .count {
+        margin-left: auto;
+        background: var(--bg3);
+        padding: 1px 7px;
+        border-radius: 9px;
+        color: var(--tx);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0;
+      }
+
+      .kv {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 12px;
+        margin-bottom: 6px;
+        gap: 10px;
+      }
+      .kv .k {
+        color: var(--faint);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-size: 10.5px;
+      }
+      .kv .v {
+        font-family: var(--mono);
+        color: var(--tx);
+        max-width: 178px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .frow2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .field > span {
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--faint);
+      }
+      .field input,
+      .field select {
+        width: 100%;
+        background: var(--bg0);
+        border: 1px solid var(--line2);
+        border-radius: 6px;
+        color: var(--tx);
+        font-family: var(--mono);
+        font-size: 12.5px;
+        padding: 6px 8px;
+        outline: none;
+      }
+      .field input:focus {
+        border-color: var(--acc);
+      }
+      .field .seg {
+        margin-top: 1px;
+      }
+
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--dim);
+        cursor: pointer;
+        margin: 2px 0 12px;
+      }
+      .check:hover {
+        color: var(--tx);
+      }
+      .check input {
+        display: none;
+      }
+      .check .box {
+        width: 15px;
+        height: 15px;
+        border: 1px solid var(--line2);
+        border-radius: 4px;
+        background: var(--bg0);
+        position: relative;
+        flex: none;
+      }
+      .check input:checked + .box {
+        background: var(--acc);
+        border-color: var(--acc);
+      }
+      .check input:checked + .box::after {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 1px;
+        width: 4px;
+        height: 8px;
+        border: solid var(--acc-ink);
+        border-width: 0 2px 2px 0;
+        transform: rotate(42deg);
+      }
+
+      .seg {
+        display: flex;
+        background: var(--bg0);
+        border: 1px solid var(--line2);
+        border-radius: 7px;
+        padding: 3px;
+        gap: 3px;
+      }
+      .seg button {
+        flex: 1;
+        border: 0;
+        background: transparent;
+        color: var(--dim);
+        font-family: var(--ui);
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 5px 2px;
+        border-radius: 5px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .seg button.on {
+        background: var(--bg3);
+        color: var(--tx);
+      }
+      .seg.mini button {
+        padding: 3px 7px;
+        font-size: 10px;
+      }
+
+      .chips {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+      .chip {
+        flex: 1;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--dim);
+        background: var(--bg0);
+        border: 1px solid var(--line2);
+        border-radius: 6px;
+        padding: 4px 0;
+        cursor: pointer;
+      }
+      .chip:hover {
+        color: var(--tx);
+        border-color: var(--acc);
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 130px;
+        resize: vertical;
+        background: var(--bg0);
+        border: 1px solid var(--line2);
+        border-radius: 6px;
+        color: var(--tx);
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.5;
+        padding: 8px;
+        outline: none;
+      }
+      textarea:focus {
+        border-color: var(--acc);
+      }
+
+      .liveprev {
+        border: 1px solid var(--line2);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+      .lp-head {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 10px;
+        background: var(--bg2);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--faint);
+      }
+      .lp-head .mono {
+        color: var(--amber);
+        font-family: var(--mono);
+        text-transform: none;
+        letter-spacing: 0;
+      }
+      #cvLive {
+        display: block;
+        width: 100%;
+        aspect-ratio: 2 / 1;
+        background: var(--bg0);
+      }
+
+      .hint {
+        font-size: 11.5px;
+        color: var(--dim);
+        line-height: 1.55;
+      }
+      .hint em {
+        color: var(--amber);
+        font-style: normal;
+      }
+      .hint.warn {
+        color: var(--amber);
+      }
+      .hint.info {
+        color: var(--cyan);
+      }
+      .hint.tight {
+        margin-bottom: 8px;
+      }
+
+      .swatches {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .swatch {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px solid var(--line2);
+        border-radius: 7px;
+        cursor: pointer;
+        background: var(--bg0);
+        font-size: 11.5px;
+        color: var(--dim);
+      }
+      .swatch:hover {
+        color: var(--tx);
+        border-color: #3d4450;
+      }
+      .swatch.on {
+        border-color: var(--acc);
+        color: var(--tx);
+        background: rgba(168, 202, 108, 0.08);
+      }
+      .swatch .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        flex: none;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+      }
+
+      /* ---------- validation ---------- */
+      .vlist {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .vlist li {
+        display: flex;
+        gap: 8px;
+        font-size: 11.5px;
+        color: var(--dim);
+        line-height: 1.45;
+        align-items: flex-start;
+        font-family: var(--mono);
+      }
+      .vlist li::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        margin-top: 4px;
+        flex: none;
+      }
+      .vlist li.ok::before {
+        background: var(--acc);
+      }
+      .vlist li.warn::before {
+        background: var(--amber);
+      }
+      .vlist li.err::before {
+        background: var(--red);
+      }
+      .vlist li.info::before {
+        background: var(--faint);
+      }
+
+      /* ---------- seamless & pixel ---------- */
+      .seamcv {
+        display: block;
+        width: 100%;
+        border: 1px solid var(--line2);
+        border-radius: 8px;
+        background: var(--bg0);
+        margin-top: 8px;
+      }
+      .scrollbox {
+        max-height: 190px;
+        overflow: auto;
+        border: 1px solid var(--line2);
+        border-radius: 8px;
+        background: var(--bg0);
+        margin-top: 8px;
+      }
+      .scrollbox canvas {
+        display: block;
+        image-rendering: pixelated;
+      }
+
+      /* ---------- library ---------- */
+      .lib-tools {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 6px;
+        margin-bottom: 10px;
+        align-items: center;
+      }
+      .tin {
+        width: 100%;
+        background: var(--bg0);
+        border: 1px solid var(--line2);
+        border-radius: 6px;
+        color: var(--tx);
+        font-family: var(--mono);
+        font-size: 11.5px;
+        padding: 5px 8px;
+        outline: none;
+      }
+      .tin:focus {
+        border-color: var(--acc);
+      }
+      #libList {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      #libList .empty {
+        font-size: 11.5px;
+        color: var(--faint);
+        line-height: 1.55;
+        padding: 2px 0;
+      }
+      .lib-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        position: relative;
+      }
+      .lib-item:hover {
+        background: var(--bg2);
+      }
+      .lib-item.on {
+        background: var(--bg2);
+        border-color: rgba(168, 202, 108, 0.4);
+      }
+      .lib-item.on::before {
+        content: "";
+        position: absolute;
+        left: -1px;
+        top: 6px;
+        bottom: 6px;
+        width: 2px;
+        background: var(--acc);
+        border-radius: 2px;
+      }
+      @keyframes freshin {
+        from {
+          background: rgba(168, 202, 108, 0.22);
+        }
+      }
+      .lib-item.fresh {
+        animation: freshin 1.4s ease-out;
+      }
+      .thumb {
+        width: 56px;
+        height: 36px;
+        flex: none;
+        border-radius: 4px;
+        border: 1px solid var(--line2);
+        background: #101216;
+      }
+      .li-meta {
+        min-width: 0;
+        flex: 1;
+      }
+      .li-name {
+        display: block;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--tx);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .li-name input {
+        width: 100%;
+        font: 12px var(--mono);
+        background: var(--bg0);
+        border: 1px solid var(--acc);
+        border-radius: 4px;
+        padding: 1px 4px;
+        color: var(--tx);
+        outline: none;
+      }
+      .li-sub {
+        display: block;
+        font-size: 10px;
+        color: var(--faint);
+        font-family: var(--mono);
+        margin-top: 2px;
+      }
+      .li-act {
+        display: flex;
+        gap: 2px;
+        opacity: 0;
+        transition: opacity 0.12s;
+      }
+      .lib-item:hover .li-act {
+        opacity: 1;
+      }
+      .li-act button {
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+        background: transparent;
+        border: 0;
+        border-radius: 5px;
+        color: var(--dim);
+        cursor: pointer;
+      }
+      .li-act button:hover {
+        color: var(--tx);
+        background: var(--bg3);
+      }
+      .li-act button.danger:hover {
+        color: var(--red);
+      }
+      .li-act svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      #brushBox {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+      }
+      #brushBox .empty {
+        color: var(--faint);
+        font-size: 11.5px;
+      }
+
+      /* ---------- status bar ---------- */
+      footer {
+        grid-area: ft;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--bg1);
+        border-top: 1px solid var(--line);
+        padding: 0 12px;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--dim);
+        gap: 12px;
+      }
+      .stat-l {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        white-space: nowrap;
+      }
+      .stat-l b {
+        color: var(--tx);
+        font-weight: 500;
+      }
+      .stat-l i {
+        color: var(--faint);
+        font-style: normal;
+      }
+      .stat-r {
+        color: var(--faint);
+        font-family: var(--ui);
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* ---------- toast ---------- */
+      #toasts {
+        position: fixed;
+        right: 14px;
+        bottom: 38px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 99;
+      }
+      .toast {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        background: var(--bg2);
+        border: 1px solid var(--line2);
+        border-left: 2px solid var(--acc);
+        border-radius: 8px;
+        padding: 9px 14px;
+        font-size: 12.5px;
+        color: var(--tx);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        animation: tin 0.18s ease-out;
+      }
+      .toast svg {
+        width: 14px;
+        height: 14px;
+        color: var(--acc);
+        flex: none;
+      }
+      .toast.warn {
+        border-left-color: var(--amber);
+      }
+      .toast.warn svg {
+        color: var(--amber);
+      }
+      .toast.out {
+        opacity: 0;
+        transform: translateY(6px);
+        transition: 0.25s;
+      }
+      @keyframes tin {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+      }
+
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--bg3);
+        border-radius: 5px;
+        border: 2px solid var(--bg1);
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+    </style>
+  </head>
+  <body class="mode-source">
+    <header>
+      <div class="brand">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+          <polygon
+            points="12,2 22,12 12,22 2,12"
+            fill="none"
+            stroke="#a8ca6c"
+            stroke-width="1.6"
+          />
+          <polygon
+            points="12,7.5 16.5,12 12,16.5 7.5,12"
+            fill="#a8ca6c"
+            opacity=".9"
+          />
+        </svg>
+        <div class="brand-t">
+          <strong>TILTH</strong
+          ><span>ai asset preparation · virtual garden</span>
+        </div>
+      </div>
+      <div class="modeswitch">
+        <button id="modeSource" class="on">Source</button>
+        <button id="modeTemplate">Template</button>
+        <button id="modeInspect">Inspect</button>
+      </div>
+      <div class="top-actions">
+        <button class="btn sm" id="btnNew" title="Project baru">
+          <i data-lucide="file-plus"></i>New
+        </button>
+        <button class="btn sm" id="btnOpen" title="Buka project .tilth.json">
+          <i data-lucide="folder-open"></i>Open
+        </button>
+        <button class="btn sm" id="btnSave" title="Simpan project">
+          <i data-lucide="save"></i>Save
+        </button>
+        <button class="btn" id="btnImport">
+          <i data-lucide="upload"></i>Import
+        </button>
+        <button class="btn" id="btnSample">
+          <i data-lucide="sparkles"></i>Sample
+        </button>
+        <button class="btn primary" id="btnExport">
+          <i data-lucide="download"></i>Export tileset
+        </button>
+      </div>
+    </header>
+
+    <nav id="toolbar">
+      <div class="tb-group only-source">
+        <button
+          class="tbtn on"
+          data-tool="hand"
+          title="Pan / geser — V atau tahan Spasi"
+        >
+          <i data-lucide="hand"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-tool="calib"
+          title="Kalibrasi 4-point — klik 4 vertex diamond (C)"
+        >
+          <i data-lucide="ruler"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-tool="select"
+          title="Select multi-diamond — klik toggle, drag marquee (S)"
+        >
+          <i data-lucide="box-select"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-tool="tile"
+          title="Crop tile — klik diamond (T)"
+        >
+          <i data-lucide="diamond"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-tool="patch"
+          title="Crop patch — drag antar diamond (P)"
+        >
+          <i data-lucide="scan"></i>
+        </button>
+        <button class="tbtn" data-tool="origin" title="Set origin grid — O">
+          <i data-lucide="crosshair"></i>
+        </button>
+      </div>
+      <div class="tb-group only-template">
+        <button
+          class="tbtn on"
+          data-ttool="paint"
+          title="Isi material — klik / drag (B)"
+        >
+          <i data-lucide="brush"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-ttool="erase"
+          title="Kosongkan cell — atau klik kanan (E)"
+        >
+          <i data-lucide="eraser"></i>
+        </button>
+        <button class="tbtn" data-ttool="fill" title="Isi satu zona utuh (F)">
+          <i data-lucide="paint-bucket"></i>
+        </button>
+      </div>
+      <div class="tb-group only-inspect">
+        <button class="tbtn on" data-ptool="brush" title="Brush — B">
+          <i data-lucide="brush"></i>
+        </button>
+        <button
+          class="tbtn"
+          data-ptool="erase"
+          title="Eraser — E atau klik kanan"
+        >
+          <i data-lucide="eraser"></i>
+        </button>
+      </div>
+      <div class="tb-sep"></div>
+      <button class="tbtn" id="tbZoomOut" title="Zoom out (−)">
+        <i data-lucide="zoom-out"></i>
+      </button>
+      <button class="tbtn" id="tbZoomIn" title="Zoom in (+)">
+        <i data-lucide="zoom-in"></i>
+      </button>
+      <button class="tbtn" id="tbFit" title="Fit to screen (0)">
+        <i data-lucide="maximize"></i>
+      </button>
+      <button class="tbtn only-source" id="tbGrid" title="Show / hide grid (G)">
+        <i data-lucide="grid-3x3"></i>
+      </button>
+      <div class="tb-sep only-inspect"></div>
+      <div class="tb-group only-inspect">
+        <button class="tbtn dis" id="tbUndo" title="Undo — Ctrl+Z">
+          <i data-lucide="undo-2"></i>
+        </button>
+        <button class="tbtn dis" id="tbRedo" title="Redo — Ctrl+Y">
+          <i data-lucide="redo-2"></i>
+        </button>
+        <button class="tbtn" id="tbClear" title="Bersihkan preview">
+          <i data-lucide="trash-2"></i>
+        </button>
+      </div>
+      <div class="tb-sep only-template"></div>
+      <div class="tb-group only-template">
+        <button class="tbtn dis" id="tbTUndo" title="Undo — Ctrl+Z">
+          <i data-lucide="undo-2"></i>
+        </button>
+        <button class="tbtn dis" id="tbTRedo" title="Redo — Ctrl+Y">
+          <i data-lucide="redo-2"></i>
+        </button>
+        <button class="tbtn" id="tbTClear" title="Kosongkan semua zona">
+          <i data-lucide="trash-2"></i>
+        </button>
+      </div>
+    </nav>
+
+    <section id="stage">
+      <canvas id="cvSrc"></canvas>
+      <canvas id="cvTmpl" class="hidden"></canvas>
+      <canvas id="cvPrev" class="hidden"></canvas>
+      <div id="prevEmpty" class="hidden"></div>
+      <div id="dropzone">
+        <i data-lucide="image" class="big"></i>
+        <h2>Tarik &amp; lepas gambar AI di sini</h2>
+        <p>
+          PNG / JPG / WebP — master diorama, atlas, atau tilesheet yang sudah
+          ada
+        </p>
+        <div class="dz-actions">
+          <button class="btn" id="dzPick">
+            <i data-lucide="upload"></i>Pilih gambar
+          </button>
+          <button class="btn" id="dzSample">
+            <i data-lucide="sparkles"></i>Buat sample diorama
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <aside id="inspector">
+      <!-- ============ PANEL SOURCE ============ -->
+      <div class="only-source">
+        <section>
+          <h3>Source</h3>
+          <div class="kv">
+            <span class="k">file</span><span class="v" id="ivFile">—</span>
+          </div>
+          <div class="kv">
+            <span class="k">size</span><span class="v" id="ivSize">—</span>
+          </div>
+          <div class="kv">
+            <span class="k">color</span><span class="v" id="ivColor">—</span>
+          </div>
+          <div class="kv">
+            <span class="k">alpha</span><span class="v" id="ivAlpha">—</span>
+          </div>
+          <div class="kv">
+            <span class="k">file size</span
+            ><span class="v" id="ivBytes">—</span>
+          </div>
+          <p class="hint info" id="ivNote" hidden>
+            Tanpa alpha channel — bisa diterima untuk master ground (mask
+            diamond tetap dihasilkan saat crop).
+          </p>
+        </section>
+
+        <section>
+          <h3>Grid isometric</h3>
+          <div class="frow2">
+            <label class="field"
+              ><span>Diamond width</span
+              ><input type="number" id="inGW" value="256" min="4" step="1"
+            /></label>
+            <label class="field"
+              ><span>Diamond height</span
+              ><input type="number" id="inGH" value="128" min="2" step="1"
+            /></label>
+          </div>
+          <label class="check"
+            ><input type="checkbox" id="inLock" checked /><i class="box"></i
+            >Kunci rasio 2:1</label
+          >
+          <div class="chips">
+            <button class="chip" data-gw="128" data-gh="64">128×64</button>
+            <button class="chip" data-gw="256" data-gh="128">
+              256×128? no — 256×128
+            </button>
+            <button class="chip" data-gw="512" data-gh="256">
+              512×256? no — 512×256
+            </button>
+          </div>
+          <div class="frow2">
+            <label class="field"
+              ><span>Origin X</span
+              ><input type="number" id="inOX" value="0" step="1"
+            /></label>
+            <label class="field"
+              ><span>Origin Y</span
+              ><input type="number" id="inOY" value="0" step="1"
+            /></label>
+          </div>
+          <p class="hint warn" id="ratioWarn" hidden>
+            Rasio source diamond bukan 2:1 — jika dipaksa ke output, bentuk akan
+            terdistorsi.
+          </p>
+          <div class="btnrow" style="margin-top: 10px">
+            <button class="btn sm wide" id="btnCalib">
+              <i data-lucide="ruler"></i>4-point calibration (C)
+            </button>
+          </div>
+          <div class="btnrow">
+            <button class="btn sm wide" id="btnManifest">
+              <i data-lucide="file-json"></i>Import manifest JSON
+            </button>
+          </div>
+          <p class="hint tight">
+            Kalibrasi: klik 4 vertex SATU diamond pada gambar — atas → kanan →
+            bawah → kiri. Editor menghitung ukuran + origin lattice yang paling
+            pas.
+          </p>
+        </section>
+
+        <section>
+          <h3>Selection</h3>
+          <div class="kv">
+            <span class="k">terpilih</span
+            ><span class="v" id="kvSel">0 cell</span>
+          </div>
+          <label class="field" style="margin-bottom: 8px"
+            ><span>Name prefix</span
+            ><input type="text" id="selPrefix" value="tile" spellcheck="false"
+          /></label>
+          <div class="btnrow">
+            <button class="btn sm dis" id="btnCropSel">
+              <i data-lucide="check-check"></i>Crop 0 → library
+            </button>
+            <button class="btn sm" id="btnClearSel">Clear</button>
+          </div>
+          <p class="hint">
+            Tool <em>Select</em> (S): klik = toggle cell, drag = marquee.
+            <em>Enter</em> = crop semua, <em>Esc</em> = bersihkan. Ideal untuk
+            satu material master → banyak varian.
+          </p>
+        </section>
+
+        <section>
+          <h3>Crop &amp; processing</h3>
+          <div class="frow2">
+            <label class="field"
+              ><span>Output width</span
+              ><input type="number" id="inOW" value="64" min="8" step="1"
+            /></label>
+            <label class="field"
+              ><span>Output height</span
+              ><input type="number" id="inOH" value="32" min="4" step="1"
+            /></label>
+          </div>
+          <div class="chips">
+            <button class="chip" data-ow="64" data-oh="32">64 × 32</button>
+            <button class="chip" data-ow="96" data-oh="48">96 × 48</button>
+            <button class="chip" data-ow="128" data-oh="64">128 × 64</button>
+          </div>
+          <div class="field" style="margin-bottom: 10px">
+            <span>Resample</span>
+            <div class="seg" id="segResample">
+              <button data-v="nearest" class="on">Nearest</button>
+              <button data-v="average">Average</button>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom: 10px">
+            <span>Background removal</span>
+            <div class="seg" id="segBg">
+              <button data-v="none" class="on">None</button>
+              <button data-v="black">Near black</button>
+              <button data-v="white">Near white</button>
+            </div>
+          </div>
+          <div class="frow2">
+            <label class="field"
+              ><span>BG tolerance</span
+              ><input type="number" id="inBgTol" value="24" min="0" max="128"
+            /></label>
+            <label class="field"
+              ><span>Alpha threshold</span
+              ><input type="number" id="inATh" value="0" min="0" max="254"
+            /></label>
+          </div>
+          <label class="check"
+            ><input type="checkbox" id="inBinA" /><i class="box"></i>Biner-kan
+            alpha (pixel art crisp)</label
+          >
+          <p class="hint warn tight">
+            BG removal hanya untuk source ber-background solid (sprite/objek).
+            Master ground full-bleed: biarkan <em>None</em> — mask diamond sudah
+            menanganinya.
+          </p>
+          <div class="liveprev">
+            <div class="lp-head">
+              <span>Live crop preview</span
+              ><span class="mono" id="lpCell">—</span>
+            </div>
+            <canvas id="cvLive" width="520" height="260"></canvas>
+          </div>
+          <p class="hint">
+            Pipeline: crop → resize → BG removal → diamond mask → alpha cleanup.
+            Tool <em>Crop tile</em> (T) untuk tile 64×32, <em>Patch</em> (P)
+            untuk sprite ground besar.
+          </p>
+        </section>
+      </div>
+
+      <!-- ============ PANEL TEMPLATE ============ -->
+      <div class="only-template">
+        <section>
+          <h3>Template canvas</h3>
+          <div class="field" style="margin-bottom: 10px">
+            <span>Preset ukuran AI</span>
+            <div class="seg" id="segTPreset">
+              <button data-w="1536" data-h="1024">1536×1024</button>
+              <button data-w="1024" data-h="1024">1024²</button>
+              <button data-w="1344" data-h="768">1344×768</button>
+              <button data-w="1920" data-h="1080">1920×1080</button>
+            </div>
+          </div>
+          <div class="frow2">
+            <label class="field"
+              ><span>Width</span
+              ><input
+                type="number"
+                id="inTW"
+                value="1536"
+                min="256"
+                max="4096"
+                step="1"
+            /></label>
+            <label class="field"
+              ><span>Height</span
+              ><input
+                type="number"
+                id="inTH"
+                value="1024"
+                min="256"
+                max="4096"
+                step="1"
+            /></label>
+          </div>
+          <div class="frow2">
+            <label class="field"
+              ><span>Columns</span
+              ><input type="number" id="inTCols" value="8" min="2" max="24"
+            /></label>
+            <label class="field"
+              ><span>Rows</span
+              ><input type="number" id="inTRows" value="6" min="2" max="24"
+            /></label>
+          </div>
+          <div class="frow2">
+            <label class="field"
+              ><span>Diamond height</span
+              ><input type="number" id="inTDH" value="52" min="4" step="1"
+            /></label>
+            <label class="field"
+              ><span>Diamond width</span
+              ><input type="number" id="inTDW" value="104" readonly
+            /></label>
+          </div>
+          <div class="kv">
+            <span class="k">origin</span><span class="v" id="kvTOrigin">—</span>
+          </div>
+          <p class="hint tight">
+            Diamond <em>auto</em> dihitung agar grid iso 2:1 maksimal muat di
+            kanvas — ubah cols/rows untuk mengubah ukurannya.
+          </p>
+        </section>
+
+        <section>
+          <h3>Zone layout</h3>
+          <div class="field" style="margin-bottom: 10px">
+            <span>Preset layout</span>
+            <div class="seg" id="segTLayout">
+              <button data-l="garden" class="on">Garden</button>
+              <button data-l="grass">All grass</button>
+              <button data-l="blank">Blank</button>
+            </div>
+          </div>
+          <div class="swatches" id="tPalette"></div>
+          <label class="check"
+            ><input type="checkbox" id="inTLabels" checked /><i class="box"></i
+            >Label nama material di tiap zona</label
+          >
+          <label class="check" style="margin-bottom: 0"
+            ><input type="checkbox" id="inTBorders" checked /><i class="box"></i
+            >Tebalkan batas antar zona</label
+          >
+        </section>
+
+        <section>
+          <h3>Export untuk AI — pendekatan A</h3>
+          <div class="kv">
+            <span class="k">zona terisi</span
+            ><span class="v" id="kvTZones">—</span>
+          </div>
+          <div class="btnrow">
+            <button class="btn sm" id="btnExportZones">
+              <i data-lucide="download"></i>Zone map PNG
+            </button>
+            <button class="btn sm" id="btnCopyPZ">
+              <i data-lucide="clipboard-copy"></i>Copy prompt
+            </button>
+          </div>
+          <p class="hint tight">
+            Untuk AI yang menerima gambar referensi (GPT-image, Nano Banana,
+            Flux Kontext, img2img): zona warna + label → AI mengisi tekstur.
+          </p>
+          <div class="btnrow">
+            <button class="btn sm" id="btnExportLines">
+              <i data-lucide="download"></i>Grid lines PNG
+            </button>
+            <button class="btn sm" id="btnCopyPL">
+              <i data-lucide="clipboard-copy"></i>Copy prompt
+            </button>
+          </div>
+          <p class="hint tight">
+            Line art untuk ControlNet Lineart / Canny — boundary zona lebih
+            tebal dari garis grid.
+          </p>
+          <button
+            class="btn primary wide"
+            id="btnExportTemplate"
+            style="margin-top: 4px"
+          >
+            <i data-lucide="download"></i>Export semua (4 file)
+          </button>
+          <p class="hint" style="margin-top: 10px">
+            Zone map + grid lines + <em>manifest JSON</em> + prompt txt.
+            Manifest di-import di mode Source agar grid nempel presisi di hasil
+            AI.
+          </p>
+        </section>
+
+        <section>
+          <h3>Prompt preset — pendekatan B</h3>
+          <p class="hint tight">
+            Satu material per generate → banyak varian tile. Lebih mudah bagi
+            AI, lebih konsisten bagi library.
+          </p>
+          <div class="field" style="margin-bottom: 8px">
+            <span>Material</span>
+            <select id="pmMat">
+              <option value="grass">Grass</option>
+              <option value="soil">Soil</option>
+              <option value="path">Path</option>
+              <option value="water">Water</option>
+              <option value="stone">Stone</option>
+              <option value="sand">Sand</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom: 8px">
+            <span>Custom deskripsi (opsional)</span
+            ><input
+              type="text"
+              id="pmCustom"
+              placeholder="mis. volcanic ash ground, warm grey…"
+              spellcheck="false"
+            />
+          </div>
+          <div class="field" style="margin-bottom: 10px">
+            <span>Style</span>
+            <select id="pmStyle">
+              <option value="pixel">Cozy pixel art</option>
+              <option value="paint">Hand-painted</option>
+              <option value="flat">Clean flat</option>
+              <option value="snes">Retro SNES</option>
+            </select>
+          </div>
+          <button class="btn wide" id="btnGenPrompt">
+            <i data-lucide="sparkles"></i>Generate prompt
+          </button>
+          <textarea
+            id="pmOut"
+            placeholder="Prompt akan muncul di sini…"
+            style="margin-top: 8px"
+            readonly
+          ></textarea>
+          <div class="btnrow" style="margin-top: 8px">
+            <button class="btn sm" id="btnCopyPM">
+              <i data-lucide="clipboard-copy"></i>Copy
+            </button>
+            <button class="btn sm" id="btnDlPM">
+              <i data-lucide="download"></i>Download .txt
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ PANEL INSPECT ============ -->
+      <div class="only-inspect">
+        <section>
+          <h3>Preview grid</h3>
+          <div class="frow2">
+            <label class="field"
+              ><span>Columns</span
+              ><input type="number" id="inPCols" value="12" min="2" max="40"
+            /></label>
+            <label class="field"
+              ><span>Rows</span
+              ><input type="number" id="inPRows" value="12" min="2" max="40"
+            /></label>
+          </div>
+          <label class="check"
+            ><input type="checkbox" id="inPGrid" checked /><i class="box"></i
+            >Tampilkan grid</label
+          >
+          <button class="btn wide" id="btnPrevPng">
+            <i data-lucide="download"></i>Download preview PNG
+          </button>
+        </section>
+
+        <section>
+          <h3>Validation</h3>
+          <ul class="vlist" id="vlist"></ul>
+        </section>
+
+        <section>
+          <h3>Seamless check</h3>
+          <div class="kv">
+            <span class="k">tile aktif</span
+            ><span class="v" id="kvSeamTile">—</span>
+          </div>
+          <div class="seg" id="segSeam">
+            <button data-n="3" class="on">3×3</button>
+            <button data-n="5">5×5</button>
+          </div>
+          <canvas id="cvSeam" class="seamcv" width="272" height="136"></canvas>
+          <p class="hint" style="margin-top: 8px">
+            Tile diulang di lattice iso — periksa apakah edge antar tile menyatu
+            (tanpa seam / bleed).
+          </p>
+        </section>
+
+        <section>
+          <h3>Pixel zoom</h3>
+          <div class="seg" id="segPix">
+            <button data-z="4">400%</button>
+            <button data-z="8" class="on">800%</button>
+            <button data-z="16">1600%</button>
+          </div>
+          <div class="scrollbox" id="pxWrap">
+            <canvas id="cvPixel"></canvas>
+          </div>
+          <p class="hint" style="margin-top: 8px">
+            Nearest-neighbor + grid piksel — scroll untuk memeriksa edge &amp;
+            mask.
+          </p>
+        </section>
+
+        <section>
+          <h3>Brush aktif</h3>
+          <div id="brushBox"></div>
+        </section>
+      </div>
+
+      <!-- ============ LIBRARY (semua mode) ============ -->
+      <section>
+        <h3>Asset library <span class="count" id="libCount">0</span></h3>
+        <div class="lib-tools">
+          <input
+            class="tin"
+            id="libSearch"
+            placeholder="cari nama…"
+            spellcheck="false"
+          />
+          <div class="seg mini" id="libFilter">
+            <button data-f="all" class="on">All</button>
+            <button data-f="tile">Tile</button>
+            <button data-f="patch">Patch</button>
+          </div>
+        </div>
+        <div id="libList"></div>
+      </section>
+    </aside>
+
+    <footer>
+      <div class="stat-l">
+        <span>IMG <b id="stImg">—</b></span
+        ><i>·</i> <span>CUR <b id="stCur">—</b></span
+        ><i>·</i> <span>CELL <b id="stCell">—</b></span
+        ><i>·</i> <span>ZOOM <b id="stZoom">—</b></span
+        ><i>·</i>
+        <span>GRID <b id="stGrid">256×128</b></span>
+      </div>
+      <div class="stat-r" id="stHint"></div>
+    </footer>
+
+    <div id="toasts"></div>
+    <input type="file" id="fileInput" accept="image/*" hidden />
+    <input
+      type="file"
+      id="manifestInput"
+      accept=".json,application/json"
+      hidden
+    />
+    <input type="file" id="projInput" accept=".json,application/json" hidden />
+
+    <script>
+      /* ================================================================
+   TILTH — AI Asset Preparation Editor (MVP v0.1)
+   Source (import · kalibrasi · multi-select crop · pipeline)
+   Template (zone map AI · prompt presets single-material)
+   Inspect (diorama paint · seamless · pixel zoom · validation)
+   Project: save/open .tilth.json (source di-embed dataURL)
+   ================================================================ */
+      const $ = (s) => document.querySelector(s);
+      const $$ = (s) => [...document.querySelectorAll(s)];
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const c255 = (v) => (v < 0 ? 0 : v > 255 ? 255 : v | 0);
+      const DPR = () => window.devicePixelRatio || 1;
+
+      function makeCanvas(w, h) {
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(w));
+        c.height = Math.max(1, Math.round(h));
+        return c;
+      }
+      function hash2(x, y) {
+        let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) | 0;
+        h = (h ^ (h >>> 13)) | 0;
+        h = Math.imul(h, 1274126177);
+        h ^= h >>> 16;
+        return (h >>> 0) / 4294967296;
+      }
+
+      /* ---------------- state ---------------- */
+      const S = {
+        mode: "source",
+        tool: "hand",
+        space: false,
+        img: null,
+        iw: 0,
+        ih: 0,
+        fileName: "",
+        fileBytes: 0,
+        imgId: 0,
+        srcInfo: { hasAlpha: false, colorMode: "—" },
+        grid: { w: 256, h: 128, ox: 0, oy: 0, show: true, lock: true },
+        out: { w: 64, h: 32, resample: "nearest" },
+        proc: { bg: "none", tol: 24, ath: 0, bin: false },
+        hoverCell: null,
+        mouse: null,
+        calib: { pts: [] }, // 4-point calibration (world coords)
+        sel: new Set(), // multi-select cell "c,r"
+        tiles: [],
+        active: null,
+        uidSeq: 1,
+        lastAdded: null,
+        libQuery: "",
+        libFilter: "all",
+      };
+      const view = { scale: 1, x: 0, y: 0, moved: false };
+      const pv = {
+        scale: 1,
+        x: 0,
+        y: 0,
+        hover: null,
+        mouse: null,
+        tool: "brush",
+        showGrid: true,
+        cols: 12,
+        rows: 12,
+        map: new Map(),
+        undo: [],
+        redo: [],
+        moved: false,
+      };
+      const tp = {
+        W: 1536,
+        H: 1024,
+        cols: 8,
+        rows: 6,
+        dw: 104,
+        dh: 52,
+        ox: 0,
+        oy: 0,
+        map: new Map(),
+        tool: "paint",
+        mat: "grass",
+        labels: true,
+        borders: true,
+        undo: [],
+        redo: [],
+        hover: null,
+        mouse: null,
+        moved: false,
+      };
+      const tpv = { scale: 1, x: 0, y: 0 };
+      let patchSel = null,
+        selDrag = null,
+        seamN = 3,
+        pixZ = 8;
+      let ptrS = null,
+        ptrP = null,
+        ptrT = null,
+        pvFitted = false,
+        tpFitted = false;
+
+      /* ---------------- materials template ---------------- */
+      const MATS = {
+        grass: {
+          label: "GRASS",
+          disp: "Grass",
+          color: "#3f7d3b",
+          cname: "GREEN",
+          prompt:
+            "lush green garden grass with subtle per-tile color variation",
+          variants:
+            "some diamonds pure grass, some with tiny flat wildflowers, some with clover, one or two with a small flat pebble",
+        },
+        soil: {
+          label: "SOIL",
+          disp: "Soil",
+          color: "#7a5c3e",
+          cname: "BROWN",
+          prompt:
+            "dark tilled loam with fine plow rows following the isometric axes",
+          variants:
+            "dark tilled rows, a wet darker patch, seeded sprout dots, a few flat pebbles",
+        },
+        path: {
+          label: "PATH",
+          disp: "Path",
+          color: "#c9a86b",
+          cname: "BEIGE",
+          prompt: "warm beige gravel garden path with small flat stones",
+          variants:
+            "light gravel, some scattered stones, a mossy stone, a slightly worn patch",
+        },
+        water: {
+          label: "WATER",
+          disp: "Water",
+          color: "#3a6ea5",
+          cname: "BLUE",
+          prompt: "calm blue water with a gentle surface pattern",
+          variants:
+            "calm ripples, a sparkling patch, a few flat stones breaking the surface",
+        },
+        stone: {
+          label: "STONE",
+          disp: "Stone",
+          color: "#8d8d92",
+          cname: "GREY",
+          prompt: "grey sandstone pavers with moss creeping through the seams",
+          variants: "clean pavers, mossy seams, one cracked paver",
+        },
+        sand: {
+          label: "SAND",
+          disp: "Sand",
+          color: "#d9c184",
+          cname: "PALE YELLOW",
+          prompt: "sandy fine-gravel ground, pale and warm",
+          variants:
+            "fine ripples, a pebble or two, a slightly damp darker patch",
+        },
+      };
+
+      /* ---------------- elements ---------------- */
+      const cvSrc = $("#cvSrc"),
+        cvPrev = $("#cvPrev"),
+        cvLive = $("#cvLive"),
+        cvTmpl = $("#cvTmpl");
+      const sctx = cvSrc.getContext("2d"),
+        pctx = cvPrev.getContext("2d"),
+        lctx = cvLive.getContext("2d"),
+        tctx = cvTmpl.getContext("2d");
+      const stImg = $("#stImg"),
+        stCur = $("#stCur"),
+        stCell = $("#stCell"),
+        stZoom = $("#stZoom"),
+        stGrid = $("#stGrid"),
+        stHint = $("#stHint");
+      const libList = $("#libList"),
+        libCount = $("#libCount");
+
+      const refreshIcons = () => window.lucide && lucide.createIcons();
+
+      function toast(msg, tone = "ok") {
+        const el = document.createElement("div");
+        el.className = "toast" + (tone === "warn" ? " warn" : "");
+        el.innerHTML = `<i data-lucide="${tone === "warn" ? "info" : "check"}"></i><span></span>`;
+        el.querySelector("span").textContent = msg;
+        $("#toasts").appendChild(el);
+        refreshIcons();
+        setTimeout(() => {
+          el.classList.add("out");
+          setTimeout(() => el.remove(), 300);
+        }, 2800);
+      }
+
+      /* ================================================================
+   GEOMETRI ISOMETRIC
+   Cell (c, r): top-vertex di (ox + (c-r)*hw, oy + (c+r)*hh).
+   a = (x/hw + y/hh)/2, b = (y/hh - x/hw)/2 → cell = floor(a), floor(b).
+   ================================================================ */
+      const gHW = () => S.grid.w / 2,
+        gHH = () => S.grid.h / 2;
+      function cellTop(c, r) {
+        return {
+          x: S.grid.ox + (c - r) * gHW(),
+          y: S.grid.oy + (c + r) * gHH(),
+        };
+      }
+      function cellAt(wx, wy) {
+        const a = ((wx - S.grid.ox) / gHW() + (wy - S.grid.oy) / gHH()) / 2;
+        const b = ((wy - S.grid.oy) / gHH() - (wx - S.grid.ox) / gHW()) / 2;
+        return { c: Math.floor(a), r: Math.floor(b) };
+      }
+      function cellTopP(c, r) {
+        const hw = S.out.w / 2,
+          hh = S.out.h / 2;
+        return { x: (c - r) * hw, y: (c + r) * hh };
+      }
+      function cellAtP(wx, wy) {
+        const hw = S.out.w / 2,
+          hh = S.out.h / 2;
+        const a = (wx / hw + wy / hh) / 2,
+          b = (wy / hh - wx / hw) / 2;
+        return { c: Math.floor(a), r: Math.floor(b) };
+      }
+      function cellTopT(c, r) {
+        const hw = tp.dw / 2,
+          hh = tp.dh / 2;
+        return { x: tp.ox + (c - r) * hw, y: tp.oy + (c + r) * hh };
+      }
+      function cellAtT(wx, wy) {
+        const hw = tp.dw / 2,
+          hh = tp.dh / 2;
+        const a = ((wx - tp.ox) / hw + (wy - tp.oy) / hh) / 2;
+        const b = ((wy - tp.oy) / hh - (wx - tp.ox) / hw) / 2;
+        return { c: Math.floor(a), r: Math.floor(b) };
+      }
+      function cellPathT(ctx, c, r) {
+        const t = cellTopT(c, r),
+          hw = tp.dw / 2,
+          hh = tp.dh / 2;
+        ctx.moveTo(t.x, t.y);
+        ctx.lineTo(t.x + hw, t.y + hh);
+        ctx.lineTo(t.x, t.y + tp.dh);
+        ctx.lineTo(t.x - hw, t.y + hh);
+        ctx.closePath();
+      }
+      function tEdges(c, r) {
+        const T = cellTopT(c, r),
+          hw = tp.dw / 2,
+          hh = tp.dh / 2;
+        const R = { x: T.x + hw, y: T.y + hh },
+          B = { x: T.x, y: T.y + tp.dh },
+          L = { x: T.x - hw, y: T.y + hh };
+        return [
+          { p1: T, p2: R, n: [c, r - 1] },
+          { p1: T, p2: L, n: [c - 1, r] },
+          { p1: R, p2: B, n: [c + 1, r] },
+          { p1: L, p2: B, n: [c, r + 1] },
+        ];
+      }
+
+      const evPos = (e, cv) => {
+        const r = cv.getBoundingClientRect();
+        return { x: e.clientX - r.left, y: e.clientY - r.top };
+      };
+      const toWorld = (p) => [
+        (p.x - view.x) / view.scale,
+        (p.y - view.y) / view.scale,
+      ];
+      const toWorldP = (p) => [
+        (p.x - pv.x) / pv.scale,
+        (p.y - pv.y) / pv.scale,
+      ];
+      const toWorldT = (p) => [
+        (p.x - tpv.x) / tpv.scale,
+        (p.y - tpv.y) / tpv.scale,
+      ];
+
+      function normRect() {
+        const cA = Math.min(patchSel.c0, patchSel.c1),
+          cB = Math.max(patchSel.c0, patchSel.c1);
+        const rA = Math.min(patchSel.r0, patchSel.r1),
+          rB = Math.max(patchSel.r0, patchSel.r1);
+        return { cA, rA, wc: cB - cA + 1, hc: rB - rA + 1 };
+      }
+
+      /* ================================================================
+   CANVAS helpers
+   ================================================================ */
+      function fitCanvas(cv) {
+        const r = cv.getBoundingClientRect();
+        const w = Math.max(1, Math.round(r.width)),
+          h = Math.max(1, Math.round(r.height));
+        const d = DPR(),
+          W = Math.round(w * d),
+          H = Math.round(h * d);
+        if (cv.width !== W || cv.height !== H) {
+          cv.width = W;
+          cv.height = H;
+        }
+        return { w, h };
+      }
+      let checkerPattern = null;
+      function getChecker(ctx) {
+        if (!checkerPattern) {
+          const pc = makeCanvas(16, 16),
+            p = pc.getContext("2d");
+          p.fillStyle = "#14161a";
+          p.fillRect(0, 0, 16, 16);
+          p.fillStyle = "#1a1d22";
+          p.fillRect(0, 0, 8, 8);
+          p.fillRect(8, 8, 8, 8);
+          checkerPattern = ctx.createPattern(pc, "repeat");
+        }
+        return checkerPattern;
+      }
+      function drawCheckerTo(c, x, y, w, h, s) {
+        c.fillStyle = "#14161a";
+        c.fillRect(x, y, w, h);
+        c.fillStyle = "#1a1d22";
+        for (let yy = y, j = 0; yy < y + h; yy += s, j++)
+          for (let xx = x + (j % 2) * s; xx < x + w; xx += s * 2)
+            c.fillRect(xx, yy, s, s);
+      }
+      function hud(ctx, x, y, text) {
+        ctx.font = '11px "IBM Plex Mono", monospace';
+        const w = ctx.measureText(text).width + 16,
+          h = 20;
+        const hx = clamp(x + 14, 6, ctx.canvas.width / DPR() - w - 6);
+        const hy = clamp(y - 28, 6, ctx.canvas.height / DPR() - h - 6);
+        ctx.fillStyle = "rgba(13,14,17,.88)";
+        ctx.strokeStyle = "rgba(240,179,74,.55)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect ? ctx.roundRect(hx, hy, w, h, 5) : ctx.rect(hx, hy, w, h);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#efb34a";
+        ctx.fillText(text, hx + 8, hy + 14);
+      }
+
+      /* ================================================================
+   RENDER — SOURCE
+   ================================================================ */
+      function renderSource() {
+        const { w, h } = fitCanvas(cvSrc),
+          d = DPR();
+        sctx.setTransform(d, 0, 0, d, 0, 0);
+        sctx.fillStyle = "#0d0e11";
+        sctx.fillRect(0, 0, w, h);
+        if (!S.img) return;
+
+        sctx.save();
+        sctx.translate(view.x, view.y);
+        sctx.fillStyle = getChecker(sctx);
+        sctx.fillRect(0, 0, S.iw * view.scale, S.ih * view.scale);
+        sctx.restore();
+
+        sctx.setTransform(
+          d * view.scale,
+          0,
+          0,
+          d * view.scale,
+          d * view.x,
+          d * view.y,
+        );
+        sctx.imageSmoothingEnabled = view.scale < 1;
+        sctx.imageSmoothingQuality = "high";
+        sctx.drawImage(S.img, 0, 0);
+        sctx.strokeStyle = "rgba(255,255,255,.18)";
+        sctx.lineWidth = 1 / view.scale;
+        sctx.strokeRect(0, 0, S.iw, S.ih);
+
+        if (S.grid.show) drawGridS();
+        drawHighlightS();
+        drawCalibS();
+        drawOriginS();
+
+        sctx.setTransform(d, 0, 0, d, 0, 0);
+        if (S.mouse) {
+          let line = null;
+          if (S.tool === "calib") {
+            const n = S.calib.pts.length;
+            line =
+              n >= 4
+                ? "CALIB — applying…"
+                : `CALIB ${n}/4 — klik vertex ${["ATAS", "KANAN", "BAWAH", "KIRI"][n]}`;
+          } else if (S.tool === "select") {
+            const n = selDrag ? marqueeCells(selDrag).length : S.sel.size;
+            line = `SELECT ${n} cell`;
+          } else if (S.tool === "origin")
+            line = `SET ORIGIN  ${Math.round(S.grid.ox)}, ${Math.round(S.grid.oy)}`;
+          else if (S.tool === "tile" && S.hoverCell)
+            line = `CELL ${S.hoverCell.c},${S.hoverCell.r} → ${S.out.w}×${S.out.h}`;
+          else if (S.tool === "patch") {
+            if (patchSel) {
+              const n = normRect();
+              line = `${n.wc}×${n.hc} cells → ${Math.round(((n.wc + n.hc) * S.out.w) / 2)}×${Math.round(((n.wc + n.hc) * S.out.h) / 2)}`;
+            } else if (S.hoverCell)
+              line = `CELL ${S.hoverCell.c},${S.hoverCell.r}`;
+          }
+          if (line) hud(sctx, S.mouse.x, S.mouse.y, line);
+        }
+      }
+
+      function cellPathS(ctx, c, r) {
+        const t = cellTop(c, r),
+          hw = gHW(),
+          hh = gHH();
+        ctx.moveTo(t.x, t.y);
+        ctx.lineTo(t.x + hw, t.y + hh);
+        ctx.lineTo(t.x, t.y + S.grid.h);
+        ctx.lineTo(t.x - hw, t.y + hh);
+        ctx.closePath();
+      }
+      function drawGridS() {
+        let cMin = 1e9,
+          cMax = -1e9,
+          rMin = 1e9,
+          rMax = -1e9;
+        for (const [x, y] of [
+          [0, 0],
+          [S.iw, 0],
+          [0, S.ih],
+          [S.iw, S.ih],
+        ]) {
+          const { c, r } = cellAt(x, y);
+          cMin = Math.min(cMin, c);
+          cMax = Math.max(cMax, c);
+          rMin = Math.min(rMin, r);
+          rMax = Math.max(rMax, r);
+        }
+        cMin--;
+        cMax++;
+        rMin--;
+        rMax++;
+        if (cMax - cMin + rMax - rMin > 8000) return;
+        sctx.beginPath();
+        for (let c = cMin; c <= cMax + 1; c++) {
+          const p0 = cellTop(c, rMin),
+            p1 = cellTop(c, rMax + 1);
+          sctx.moveTo(p0.x, p0.y);
+          sctx.lineTo(p1.x, p1.y);
+        }
+        for (let r = rMin; r <= rMax + 1; r++) {
+          const p0 = cellTop(cMin, r),
+            p1 = cellTop(cMax + 1, r);
+          sctx.moveTo(p0.x, p0.y);
+          sctx.lineTo(p1.x, p1.y);
+        }
+        sctx.strokeStyle = "rgba(255,255,255,.22)";
+        sctx.lineWidth = 1 / view.scale;
+        sctx.stroke();
+      }
+      function patchPathS(ctx, cA, rA, wc, hc) {
+        const A = cellTop(cA, rA),
+          hw = gHW(),
+          hh = gHH();
+        ctx.moveTo(A.x, A.y);
+        ctx.lineTo(A.x + wc * hw, A.y + wc * hh);
+        ctx.lineTo(A.x + (wc - hc) * hw, A.y + (wc + hc) * hh);
+        ctx.lineTo(A.x - hc * hw, A.y + hc * hh);
+        ctx.closePath();
+      }
+      function drawCellsFill(keys, fill, stroke, lw) {
+        sctx.beginPath();
+        for (const k of keys) {
+          const i = k.indexOf(",");
+          cellPathS(sctx, +k.slice(0, i), +k.slice(i + 1));
+        }
+        if (fill) {
+          sctx.fillStyle = fill;
+          sctx.fill();
+        }
+        if (stroke) {
+          sctx.strokeStyle = stroke;
+          sctx.lineWidth = lw;
+          sctx.stroke();
+        }
+      }
+      function drawHighlightS() {
+        const lw = 1.5 / view.scale;
+
+        /* multi-select persisten */
+        if (S.sel.size)
+          drawCellsFill(
+            S.sel,
+            "rgba(168,202,108,.18)",
+            "#a8ca6c",
+            1.2 / view.scale,
+          );
+
+        /* marquee aktif */
+        if (selDrag) {
+          const cells = marqueeCells(selDrag);
+          if (cells.length)
+            drawCellsFill(cells, "rgba(168,202,108,.14)", null, 0);
+          const x0 = Math.min(selDrag.x0, selDrag.x1),
+            y0 = Math.min(selDrag.y0, selDrag.y1);
+          const x1 = Math.max(selDrag.x0, selDrag.x1),
+            y1 = Math.max(selDrag.y0, selDrag.y1);
+          sctx.setLineDash([6 / view.scale, 4 / view.scale]);
+          sctx.strokeStyle = "#a8ca6c";
+          sctx.lineWidth = 1 / view.scale;
+          sctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+          sctx.setLineDash([]);
+        }
+
+        if (S.tool === "select" && S.hoverCell) {
+          sctx.beginPath();
+          cellPathS(sctx, S.hoverCell.c, S.hoverCell.r);
+          sctx.strokeStyle = "rgba(255,255,255,.55)";
+          sctx.lineWidth = 1 / view.scale;
+          sctx.stroke();
+        } else if (S.tool === "tile" && S.hoverCell) {
+          sctx.beginPath();
+          cellPathS(sctx, S.hoverCell.c, S.hoverCell.r);
+          sctx.fillStyle = "rgba(240,179,74,.16)";
+          sctx.fill();
+          sctx.strokeStyle = "#efb34a";
+          sctx.lineWidth = lw;
+          sctx.stroke();
+        } else if (S.tool === "patch") {
+          if (patchSel) {
+            const n = normRect();
+            sctx.beginPath();
+            patchPathS(sctx, n.cA, n.rA, n.wc, n.hc);
+            sctx.fillStyle = "rgba(240,179,74,.16)";
+            sctx.fill();
+            sctx.strokeStyle = "#efb34a";
+            sctx.lineWidth = lw;
+            sctx.stroke();
+          } else if (S.hoverCell) {
+            sctx.beginPath();
+            cellPathS(sctx, S.hoverCell.c, S.hoverCell.r);
+            sctx.fillStyle = "rgba(240,179,74,.10)";
+            sctx.fill();
+          }
+        }
+      }
+      function drawCalibS() {
+        const pts = S.calib.pts;
+        if (!pts.length) return;
+        const s = 1 / view.scale;
+        if (pts.length > 1) {
+          sctx.setLineDash([6 * s, 4 * s]);
+          sctx.strokeStyle = "#7fd1d8";
+          sctx.lineWidth = 1.5 * s;
+          sctx.beginPath();
+          pts.forEach((p, i) =>
+            i ? sctx.lineTo(p.x, p.y) : sctx.moveTo(p.x, p.y),
+          );
+          if (pts.length === 4) sctx.closePath();
+          sctx.stroke();
+          sctx.setLineDash([]);
+        }
+        const lbl = ["T", "R", "B", "L"];
+        pts.forEach((p, i) => {
+          sctx.beginPath();
+          sctx.arc(p.x, p.y, 6 * s, 0, Math.PI * 2);
+          sctx.fillStyle = "#7fd1d8";
+          sctx.fill();
+          sctx.fillStyle = "#0d0e11";
+          sctx.font = `bold ${9 * s}px monospace`;
+          sctx.textAlign = "center";
+          sctx.textBaseline = "middle";
+          sctx.fillText(lbl[i], p.x, p.y + 0.5);
+          sctx.textAlign = "left";
+          sctx.textBaseline = "alphabetic";
+        });
+      }
+      function drawOriginS() {
+        const { ox, oy } = S.grid,
+          s = 1 / view.scale,
+          L = 7 * s;
+        sctx.lineWidth = 3 * s;
+        sctx.strokeStyle = "rgba(10,12,14,.9)";
+        sctx.beginPath();
+        sctx.moveTo(ox - L, oy);
+        sctx.lineTo(ox + L, oy);
+        sctx.moveTo(ox, oy - L);
+        sctx.lineTo(ox, oy + L);
+        sctx.stroke();
+        sctx.lineWidth = 1 * s;
+        sctx.strokeStyle = "#7fd1d8";
+        sctx.beginPath();
+        sctx.moveTo(ox - L, oy);
+        sctx.lineTo(ox + L, oy);
+        sctx.moveTo(ox, oy - L);
+        sctx.lineTo(ox, oy + L);
+        sctx.stroke();
+      }
+
+      /* ================================================================
+   SELECTION (multi-diamond) & CALIBRATION
+   ================================================================ */
+      function marqueeCells(m) {
+        const x0 = Math.min(m.x0, m.x1),
+          x1 = Math.max(m.x0, m.x1);
+        const y0 = Math.min(m.y0, m.y1),
+          y1 = Math.max(m.y0, m.y1);
+        let cMin = 1e9,
+          cMax = -1e9,
+          rMin = 1e9,
+          rMax = -1e9;
+        for (const [px, py] of [
+          [x0, y0],
+          [x1, y0],
+          [x0, y1],
+          [x1, y1],
+        ]) {
+          const cc = cellAt(px, py);
+          cMin = Math.min(cMin, cc.c);
+          cMax = Math.max(cMax, cc.c);
+          rMin = Math.min(rMin, cc.r);
+          rMax = Math.max(rMax, cc.r);
+        }
+        if ((cMax - cMin + 1) * (rMax - rMin + 1) > 4000) return [];
+        const out = [];
+        for (let r = rMin; r <= rMax; r++)
+          for (let c = cMin; c <= cMax; c++) {
+            const t = cellTop(c, r),
+              cx = t.x,
+              cy = t.y + S.grid.h / 2;
+            if (
+              cx >= x0 &&
+              cx <= x1 &&
+              cy >= y0 &&
+              cy <= y1 &&
+              cx >= 0 &&
+              cx <= S.iw &&
+              cy >= 0 &&
+              cy <= S.ih
+            )
+              out.push(c + "," + r);
+          }
+        return out;
+      }
+      function toggleSelCell(c, r) {
+        const k = c + "," + r;
+        S.sel.has(k) ? S.sel.delete(k) : S.sel.add(k);
+        updateSelUI();
+      }
+      function updateSelUI() {
+        $("#kvSel").textContent = `${S.sel.size} cell`;
+        const b = $("#btnCropSel");
+        b.innerHTML = `<i data-lucide="check-check"></i>Crop ${S.sel.size} → library`;
+        b.classList.toggle("dis", !S.sel.size);
+        refreshIcons();
+      }
+      function cropSelection() {
+        if (!S.sel.size) {
+          toast("Belum ada cell terpilih", "warn");
+          return;
+        }
+        const prefix = ($("#selPrefix").value.trim() || "tile").replace(
+          /\s+/g,
+          "_",
+        );
+        const cells = [...S.sel]
+          .map((k) => {
+            const i = k.indexOf(",");
+            return { c: +k.slice(0, i), r: +k.slice(i + 1) };
+          })
+          .sort((a, b) => a.c + a.r - (b.c + b.r) || a.c - b.c);
+        let made = 0,
+          skipped = 0,
+          last = null;
+        for (const cell of cells) {
+          const res = cropPipeline(cell.c, cell.r, 1, 1);
+          if (!res) {
+            skipped++;
+            continue;
+          }
+          last = addAsset(
+            res,
+            1,
+            1,
+            cell.c,
+            cell.r,
+            `${prefix}_${String(++made).padStart(2, "0")}`,
+          );
+        }
+        S.sel.clear();
+        updateSelUI();
+        renderSource();
+        updateLive();
+        if (last) setActive(last.uid);
+        updateInspectPanels();
+        toast(
+          `${made} tile dibuat${skipped ? `, ${skipped} dilewati (kosong)` : ""}${skipped ? "" : " → library"}`,
+        );
+      }
+      function applyCalibration() {
+        const [T, R, B, L] = S.calib.pts;
+        const cx = ((T.x + B.x) / 2 + (R.x + L.x) / 2) / 2;
+        const cy = ((T.y + B.y) / 2 + (R.y + L.y) / 2) / 2;
+        const hw = (R.x - L.x) / 2,
+          hh = (B.y - T.y) / 2;
+        if (!isFinite(hw) || !isFinite(hh) || hw < 2 || hh < 1) {
+          toast("Kalibrasi tidak valid — coba lagi", "warn");
+          S.calib.pts = [];
+          renderSource();
+          return;
+        }
+        const skew =
+          (Math.abs(T.x - cx) +
+            Math.abs(B.x - cx) +
+            Math.abs(L.y - cy) +
+            Math.abs(R.y - cy)) /
+          (R.x - L.x + (B.y - T.y));
+        S.grid.w = Math.round(hw * 2);
+        S.grid.h = Math.round(hh * 2);
+        S.grid.ox = Math.round(cx);
+        S.grid.oy = Math.round(cy - hh);
+        S.calib.pts = [];
+        S.sel.clear();
+        patchSel = null;
+        syncInputs();
+        renderSource();
+        updateLive();
+        updateStatus();
+        updateSelUI();
+        updateInspectPanels();
+        toast(
+          `Kalibrasi: diamond ${S.grid.w}×${S.grid.h} · ratio ${(S.grid.w / S.grid.h).toFixed(2)}:1`,
+        );
+        if (skew > 0.03)
+          toast(
+            "Diamond sedikit miring/skew — grid TILTH axis-aligned, periksa hasil crop di live preview",
+            "warn",
+          );
+      }
+
+      /* ================================================================
+   CROP PIPELINE
+   crop → resize (nearest/average) → BG removal → diamond mask
+   → alpha cleanup (threshold / biner). Ukuran output exact.
+   ================================================================ */
+      function boxAverage(src, dctx, dw, dh) {
+        const sw = src.width,
+          sh = src.height;
+        const sd = src.getContext("2d").getImageData(0, 0, sw, sh).data;
+        const out = dctx.createImageData(dw, dh),
+          d = out.data;
+        const fx = sw / dw,
+          fy = sh / dh;
+        for (let y = 0; y < dh; y++) {
+          const y0 = Math.floor(y * fy),
+            y1 = Math.min(sh, Math.max(y0 + 1, Math.floor((y + 1) * fy)));
+          for (let x = 0; x < dw; x++) {
+            const x0 = Math.floor(x * fx),
+              x1 = Math.min(sw, Math.max(x0 + 1, Math.floor((x + 1) * fx)));
+            let r = 0,
+              g = 0,
+              b = 0,
+              a = 0,
+              n = 0;
+            for (let yy = y0; yy < y1; yy++) {
+              let i = (yy * sw + x0) * 4;
+              for (let xx = x0; xx < x1; xx++) {
+                r += sd[i];
+                g += sd[i + 1];
+                b += sd[i + 2];
+                a += sd[i + 3];
+                n++;
+                i += 4;
+              }
+            }
+            const j = (y * dw + x) * 4;
+            d[j] = r / n;
+            d[j + 1] = g / n;
+            d[j + 2] = b / n;
+            d[j + 3] = a / n;
+          }
+        }
+        dctx.putImageData(out, 0, 0);
+      }
+
+      function cropPipeline(c0, r0, wc, hc) {
+        if (!S.img) return null;
+        const sHW = gHW(),
+          sHH = gHH();
+        const A = cellTop(c0, r0);
+        const bx = A.x - hc * sHW,
+          by = A.y;
+        const bw = (wc + hc) * sHW,
+          bh = (wc + hc) * sHH;
+        if (bw <= 0 || bh <= 0) return null;
+        if (bx >= S.iw || by >= S.ih || bx + bw <= 0 || by + bh <= 0)
+          return null;
+
+        const P = wc + hc;
+        const ow = Math.max(1, Math.round((P * S.out.w) / 2));
+        const oh = Math.max(1, Math.round((P * S.out.h) / 2));
+
+        const temp = makeCanvas(bw, bh),
+          tctx = temp.getContext("2d");
+        tctx.setTransform(1, 0, 0, 1, -bx, -by);
+        tctx.drawImage(S.img, 0, 0);
+        tctx.setTransform(1, 0, 0, 1, 0, 0);
+
+        const out = makeCanvas(ow, oh),
+          octx = out.getContext("2d");
+        if (
+          S.out.resample === "average" &&
+          temp.width > ow &&
+          temp.height > oh
+        ) {
+          boxAverage(temp, octx, ow, oh);
+        } else {
+          octx.imageSmoothingEnabled = false;
+          octx.drawImage(temp, 0, 0, temp.width, temp.height, 0, 0, ow, oh);
+        }
+
+        /* BG removal — sebelum mask (hanya utk source ber-bg solid) */
+        if (S.proc.bg !== "none") {
+          const img = octx.getImageData(0, 0, ow, oh),
+            d = img.data;
+          const k = S.proc.bg === "black" ? [0, 0, 0] : [255, 255, 255];
+          const t2 = 3 * S.proc.tol * S.proc.tol;
+          for (let i = 0; i < d.length; i += 4) {
+            const dr = d[i] - k[0],
+              dg = d[i + 1] - k[1],
+              db = d[i + 2] - k[2];
+            if (dr * dr + dg * dg + db * db <= t2) d[i + 3] = 0;
+          }
+          octx.putImageData(img, 0, 0);
+        }
+
+        /* mask parallelogram di ruang output */
+        const mcv = makeCanvas(ow, oh),
+          mc = mcv.getContext("2d");
+        mc.fillStyle = "#fff";
+        mc.beginPath();
+        mc.moveTo((hc / P) * ow, 0);
+        mc.lineTo(ow, (wc / P) * oh);
+        mc.lineTo((wc / P) * ow, oh);
+        mc.lineTo(0, (hc / P) * oh);
+        mc.closePath();
+        mc.fill();
+        const md = mc.getImageData(0, 0, ow, oh).data;
+        const od = octx.getImageData(0, 0, ow, oh),
+          dd = od.data;
+        let any = false;
+        for (let i = 3; i < md.length; i += 4) {
+          if (md[i] < 128) dd[i] = 0;
+          else {
+            if (md[i] < 255 && dd[i] > 0) dd[i] = 255;
+            if (dd[i] > 0) any = true;
+          }
+        }
+        if (!any) return null;
+
+        /* alpha cleanup: threshold + biner */
+        if (S.proc.ath > 0 || S.proc.bin) {
+          for (let i = 3; i < dd.length; i += 4) {
+            if (S.proc.ath > 0 && dd[i] > 0 && dd[i] < S.proc.ath) dd[i] = 0;
+            if (S.proc.bin) dd[i] = dd[i] >= 128 ? 255 : 0;
+          }
+        }
+        octx.putImageData(od, 0, 0);
+        return { canvas: out, ax: (hc / P) * ow, ay: 0 };
+      }
+
+      function addAsset(res, wc, hc, c0, r0, name) {
+        const type = wc === 1 && hc === 1 ? "tile" : "patch";
+        const t = {
+          uid: S.uidSeq++,
+          name:
+            name ||
+            `${type}_${String(S.tiles.filter((x) => x.type === type).length + 1).padStart(2, "0")}`,
+          type,
+          wc,
+          hc,
+          canvas: res.canvas,
+          ax: res.ax,
+          ay: res.ay,
+          src: {
+            c0,
+            r0,
+            gw: S.grid.w,
+            gh: S.grid.h,
+            gox: S.grid.ox,
+            goy: S.grid.oy,
+            imgId: S.imgId,
+          },
+        };
+        S.tiles.push(t);
+        S.lastAdded = t.uid;
+        return t;
+      }
+      function commitCrop(c0, r0, wc, hc, name) {
+        const res = cropPipeline(c0, r0, wc, hc);
+        if (!res) {
+          toast("Tidak ada konten gambar di area ini", "warn");
+          return;
+        }
+        const t = addAsset(res, wc, hc, c0, r0, name);
+        setActive(t.uid);
+        updateInspectPanels();
+        toast(
+          `${t.name} ditambahkan · ${res.canvas.width}×${res.canvas.height}px`,
+        );
+      }
+
+      /* re-crop tile dari snapshot grid-nya sendiri (imgId harus cocok) */
+      function recropTile(t) {
+        if (!S.img || !t.src || t.src.imgId !== S.imgId) return false;
+        const g = S.grid,
+          sv = { w: g.w, h: g.h, ox: g.ox, oy: g.oy };
+        g.w = t.src.gw;
+        g.h = t.src.gh;
+        g.ox = t.src.gox;
+        g.oy = t.src.goy;
+        const res = cropPipeline(t.src.c0, t.src.r0, t.wc, t.hc);
+        g.w = sv.w;
+        g.h = sv.h;
+        g.ox = sv.ox;
+        g.oy = sv.oy;
+        if (res) {
+          t.canvas = res.canvas;
+          t.ax = res.ax;
+          t.ay = res.ay;
+          return true;
+        }
+        return false;
+      }
+      function retileTiles() {
+        if (!S.tiles.length) return;
+        for (const t of S.tiles) {
+          if (recropTile(t)) continue;
+          const P = t.wc + t.hc,
+            ow = Math.max(1, Math.round((P * S.out.w) / 2)),
+            oh = Math.max(1, Math.round((P * S.out.h) / 2));
+          const cv = makeCanvas(ow, oh),
+            c = cv.getContext("2d");
+          c.imageSmoothingEnabled = false;
+          c.drawImage(
+            t.canvas,
+            0,
+            0,
+            t.canvas.width,
+            t.canvas.height,
+            0,
+            0,
+            ow,
+            oh,
+          );
+          t.canvas = cv;
+          t.ax = (t.hc / P) * ow;
+          t.ay = 0;
+        }
+        renderLibrary();
+        updateBrushBox();
+        renderPreview();
+        updateInspectPanels();
+      }
+
+      /* ================================================================
+   LIVE CROP PREVIEW
+   ================================================================ */
+      function updateLive() {
+        lctx.setTransform(1, 0, 0, 1, 0, 0);
+        drawCheckerTo(lctx, 0, 0, 520, 260, 10);
+        let res = null,
+          label = "—";
+        if (S.img && S.tool === "tile" && S.hoverCell) {
+          res = cropPipeline(S.hoverCell.c, S.hoverCell.r, 1, 1);
+          if (res) label = `cell ${S.hoverCell.c},${S.hoverCell.r}`;
+        } else if (S.img && S.tool === "patch") {
+          let c0,
+            r0,
+            wc = 1,
+            hc = 1;
+          if (patchSel) {
+            const n = normRect();
+            c0 = n.cA;
+            r0 = n.rA;
+            wc = n.wc;
+            hc = n.hc;
+          } else if (S.hoverCell) {
+            c0 = S.hoverCell.c;
+            r0 = S.hoverCell.r;
+          }
+          if (c0 !== undefined) {
+            res = cropPipeline(c0, r0, wc, hc);
+            if (res)
+              label =
+                wc === 1 && hc === 1
+                  ? `cell ${c0},${r0}`
+                  : `${wc}×${hc} → ${res.canvas.width}×${res.canvas.height}`;
+          }
+        }
+        if (res) {
+          const s = Math.min(
+            (520 - 30) / res.canvas.width,
+            (260 - 30) / res.canvas.height,
+            4,
+          );
+          const ss = s >= 1 ? Math.max(1, Math.floor(s)) : s;
+          const dw = res.canvas.width * ss,
+            dh = res.canvas.height * ss;
+          lctx.imageSmoothingEnabled = ss < 1;
+          lctx.imageSmoothingQuality = "high";
+          lctx.drawImage(res.canvas, (520 - dw) / 2, (260 - dh) / 2, dw, dh);
+        }
+        $("#lpCell").textContent = label;
+      }
+
+      /* ================================================================
+   ASSET LIBRARY
+   ================================================================ */
+      const byUid = (uid) => S.tiles.find((t) => t.uid === uid) || null;
+
+      function drawThumb(cv, t) {
+        const c = cv.getContext("2d");
+        drawCheckerTo(c, 0, 0, cv.width, cv.height, 8);
+        const s = Math.min(
+          (cv.width - 8) / t.canvas.width,
+          (cv.height - 8) / t.canvas.height,
+        );
+        const dw = t.canvas.width * s,
+          dh = t.canvas.height * s;
+        c.imageSmoothingEnabled = s < 1;
+        c.drawImage(
+          t.canvas,
+          (cv.width - dw) / 2,
+          (cv.height - dh) / 2,
+          dw,
+          dh,
+        );
+      }
+      function renderLibrary() {
+        libCount.textContent = S.tiles.length;
+        if (!S.tiles.length) {
+          libList.innerHTML =
+            '<p class="empty">Belum ada asset. Gunakan tool <em>Crop tile</em> (T) atau <em>Select</em> (S) + batch crop, lalu hasilnya masuk sini.</p>';
+          return;
+        }
+        const q = S.libQuery.toLowerCase();
+        const list = S.tiles.filter(
+          (t) =>
+            (S.libFilter === "all" || t.type === S.libFilter) &&
+            (!q || t.name.toLowerCase().includes(q)),
+        );
+        if (!list.length) {
+          libList.innerHTML =
+            '<p class="empty">Tidak ada yang cocok dengan filter.</p>';
+          S.lastAdded = null;
+          return;
+        }
+        libList.innerHTML = "";
+        for (const t of list) {
+          const item = document.createElement("div");
+          item.className =
+            "lib-item" +
+            (t.uid === S.active ? " on" : "") +
+            (t.uid === S.lastAdded ? " fresh" : "");
+          item.dataset.uid = t.uid;
+          item.innerHTML = `
+      <canvas class="thumb" width="112" height="72"></canvas>
+      <div class="li-meta">
+        <span class="li-name">${t.name}</span>
+        <span class="li-sub">${t.type} · ${t.wc}×${t.hc} cell · ${t.canvas.width}×${t.canvas.height}px</span>
+      </div>
+      <div class="li-act">
+        <button data-act="dup" title="Duplikat"><i data-lucide="copy"></i></button>
+        <button data-act="dl" title="Download PNG"><i data-lucide="download"></i></button>
+        <button data-act="del" class="danger" title="Hapus"><i data-lucide="x"></i></button>
+      </div>`;
+          drawThumb(item.querySelector(".thumb"), t);
+          libList.appendChild(item);
+        }
+        S.lastAdded = null;
+        refreshIcons();
+      }
+      function setActive(uid) {
+        S.active = uid;
+        renderLibrary();
+        updateBrushBox();
+        updatePrevEmpty();
+        updateInspectPanels();
+        if (S.mode === "inspect") renderPreview();
+      }
+      function deleteTile(t) {
+        S.tiles = S.tiles.filter((x) => x.uid !== t.uid);
+        for (const [k, e] of [...pv.map]) if (e.uid === t.uid) pv.map.delete(k);
+        if (S.active === t.uid) S.active = S.tiles[0] ? S.tiles[0].uid : null;
+        renderLibrary();
+        updateBrushBox();
+        renderPreview();
+        updatePrevEmpty();
+        updateInspectPanels();
+        toast(`${t.name} dihapus`);
+      }
+      function duplicateTile(t) {
+        const cv = makeCanvas(t.canvas.width, t.canvas.height);
+        cv.getContext("2d").drawImage(t.canvas, 0, 0);
+        const nt = {
+          uid: S.uidSeq++,
+          name: t.name + "_copy",
+          type: t.type,
+          wc: t.wc,
+          hc: t.hc,
+          canvas: cv,
+          ax: t.ax,
+          ay: t.ay,
+          src: t.src,
+        };
+        S.tiles.push(nt);
+        S.lastAdded = nt.uid;
+        setActive(nt.uid);
+        toast(`${nt.name} diduplikasi`);
+      }
+      function startRename(t, span) {
+        const inp = document.createElement("input");
+        inp.value = t.name;
+        span.textContent = "";
+        span.appendChild(inp);
+        inp.focus();
+        inp.select();
+        let done = false;
+        const commit = (ok) => {
+          if (done) return;
+          done = true;
+          if (ok) {
+            const v = inp.value.trim();
+            if (v) t.name = v;
+          }
+          renderLibrary();
+          updateBrushBox();
+        };
+        inp.addEventListener("blur", () => commit(true));
+        inp.addEventListener("click", (e) => e.stopPropagation());
+        inp.addEventListener("keydown", (e) => {
+          e.stopPropagation();
+          if (e.key === "Enter") commit(true);
+          if (e.key === "Escape") commit(false);
+        });
+      }
+      libList.addEventListener("click", (e) => {
+        const item = e.target.closest(".lib-item");
+        if (!item) return;
+        const t = byUid(+item.dataset.uid);
+        if (!t) return;
+        const btn = e.target.closest("button[data-act]");
+        if (btn) {
+          if (btn.dataset.act === "del") deleteTile(t);
+          else if (btn.dataset.act === "dup") duplicateTile(t);
+          else t.canvas.toBlob((b) => download(b, t.name + ".png"));
+          e.stopPropagation();
+          return;
+        }
+        setActive(t.uid);
+      });
+      libList.addEventListener("dblclick", (e) => {
+        const span = e.target.closest(".li-name");
+        if (!span) return;
+        const t = byUid(+e.target.closest(".lib-item").dataset.uid);
+        if (t) startRename(t, span);
+      });
+      $("#libSearch").addEventListener("input", (e) => {
+        S.libQuery = e.target.value;
+        renderLibrary();
+      });
+      $$("#libFilter button").forEach((b) =>
+        b.addEventListener("click", () => {
+          S.libFilter = b.dataset.f;
+          $$("#libFilter button").forEach((x) =>
+            x.classList.toggle("on", x === b),
+          );
+          renderLibrary();
+        }),
+      );
+
+      function updateBrushBox() {
+        const box = $("#brushBox"),
+          t = byUid(S.active);
+        box.innerHTML = t
+          ? `<canvas class="thumb" width="112" height="72"></canvas>
+       <div class="li-meta"><span class="li-name">${t.name}</span><span class="li-sub">${t.type} · ${t.canvas.width}×${t.canvas.height}px</span></div>`
+          : '<span class="empty">Pilih tile di Asset Library untuk jadi brush.</span>';
+        if (t) drawThumb(box.querySelector(".thumb"), t);
+      }
+
+      /* ================================================================
+   PREVIEW / DIORAMA PAINT (Inspect)
+   ================================================================ */
+      function entriesSorted() {
+        return [...pv.map]
+          .map(([k, e]) => {
+            const i = k.indexOf(",");
+            return { c: +k.slice(0, i), r: +k.slice(i + 1), ...e };
+          })
+          .sort((a, b) => a.c + a.r - (b.c + b.r) || a.c - b.c);
+      }
+      function serializeMap() {
+        return JSON.stringify(
+          [...pv.map].map(([k, e]) => [k, e.uid, e.wc, e.hc]),
+        );
+      }
+      function loadMap(s) {
+        pv.map = new Map(
+          JSON.parse(s).map(([k, uid, wc, hc]) => [k, { uid, wc, hc }]),
+        );
+      }
+      function pushUndo() {
+        pv.undo.push(serializeMap());
+        if (pv.undo.length > 60) pv.undo.shift();
+        pv.redo.length = 0;
+        updateUndoBtns();
+      }
+      function doUndo() {
+        if (!pv.undo.length) return;
+        pv.redo.push(serializeMap());
+        loadMap(pv.undo.pop());
+        renderPreview();
+        updateUndoBtns();
+      }
+      function doRedo() {
+        if (!pv.redo.length) return;
+        pv.undo.push(serializeMap());
+        loadMap(pv.redo.pop());
+        renderPreview();
+        updateUndoBtns();
+      }
+      function updateUndoBtns() {
+        $("#tbUndo").classList.toggle("dis", !pv.undo.length);
+        $("#tbRedo").classList.toggle("dis", !pv.redo.length);
+      }
+      function removeOverlap(c, r, wc, hc) {
+        for (const [k, e] of [...pv.map]) {
+          const i = k.indexOf(","),
+            ec = +k.slice(0, i),
+            er = +k.slice(i + 1);
+          if (ec < c + wc && ec + e.wc > c && er < r + hc && er + e.hc > r)
+            pv.map.delete(k);
+        }
+      }
+      function canPaint(c, r) {
+        const t = byUid(S.active);
+        return !!(
+          t &&
+          c >= 0 &&
+          r >= 0 &&
+          c + t.wc <= pv.cols &&
+          r + t.hc <= pv.rows
+        );
+      }
+      function canErase(c, r) {
+        for (const [k, e] of pv.map) {
+          const i = k.indexOf(","),
+            ec = +k.slice(0, i),
+            er = +k.slice(i + 1);
+          if (ec <= c && c < ec + e.wc && er <= r && r < er + e.hc) return true;
+        }
+        return false;
+      }
+      function paintCell(c, r) {
+        const t = byUid(S.active);
+        if (!t) return;
+        removeOverlap(c, r, t.wc, t.hc);
+        pv.map.set(c + "," + r, { uid: t.uid, wc: t.wc, hc: t.hc });
+        renderPreview();
+      }
+      function eraseCell(c, r) {
+        let hit = false;
+        for (const [k, e] of [...pv.map]) {
+          const i = k.indexOf(","),
+            ec = +k.slice(0, i),
+            er = +k.slice(i + 1);
+          if (ec <= c && c < ec + e.wc && er <= r && r < er + e.hc) {
+            pv.map.delete(k);
+            hit = true;
+          }
+        }
+        if (hit) renderPreview();
+      }
+      function fitPreview() {
+        const r = cvPrev.getBoundingClientRect();
+        if (r.width < 10) return;
+        const hw = S.out.w / 2,
+          hh = S.out.h / 2;
+        const W = (pv.cols + pv.rows) * hw,
+          H = (pv.cols + pv.rows) * hh;
+        pv.scale = clamp(
+          Math.min((r.width - 70) / W, (r.height - 70) / H),
+          0.05,
+          8,
+        );
+        pv.x = r.width / 2 - (((pv.cols - pv.rows) * hw) / 2) * pv.scale;
+        pv.y = r.height / 2 - (H / 2) * pv.scale;
+        pv.moved = false;
+      }
+      function renderPreview() {
+        if (S.mode !== "inspect") return;
+        const { w, h } = fitCanvas(cvPrev),
+          d = DPR();
+        pctx.setTransform(d, 0, 0, d, 0, 0);
+        pctx.fillStyle = "#0d0e11";
+        pctx.fillRect(0, 0, w, h);
+        pctx.setTransform(d * pv.scale, 0, 0, d * pv.scale, d * pv.x, d * pv.y);
+        const hw = S.out.w / 2,
+          hh = S.out.h / 2;
+
+        pctx.imageSmoothingEnabled = false;
+        for (const e of entriesSorted()) {
+          const t = byUid(e.uid);
+          if (!t) continue;
+          pctx.drawImage(
+            t.canvas,
+            (e.c - e.r) * hw - t.ax,
+            (e.c + e.r) * hh - t.ay,
+          );
+        }
+
+        pctx.beginPath();
+        pctx.moveTo(0, 0);
+        pctx.lineTo(pv.cols * hw, pv.cols * hh);
+        pctx.lineTo((pv.cols - pv.rows) * hw, (pv.cols + pv.rows) * hh);
+        pctx.lineTo(-pv.rows * hw, pv.rows * hh);
+        pctx.closePath();
+        pctx.strokeStyle = "rgba(255,255,255,.16)";
+        pctx.lineWidth = 1 / pv.scale;
+        pctx.stroke();
+
+        if (pv.showGrid) {
+          pctx.beginPath();
+          for (let c = 0; c <= pv.cols; c++) {
+            const p0 = cellTopP(c, 0),
+              p1 = cellTopP(c, pv.rows);
+            pctx.moveTo(p0.x, p0.y);
+            pctx.lineTo(p1.x, p1.y);
+          }
+          for (let r = 0; r <= pv.rows; r++) {
+            const p0 = cellTopP(0, r),
+              p1 = cellTopP(pv.cols, r);
+            pctx.moveTo(p0.x, p0.y);
+            pctx.lineTo(p1.x, p1.y);
+          }
+          pctx.strokeStyle = "rgba(255,255,255,.10)";
+          pctx.lineWidth = 1 / pv.scale;
+          pctx.stroke();
+        }
+
+        const bt = byUid(S.active);
+        if (
+          pv.tool === "brush" &&
+          bt &&
+          pv.hover &&
+          canPaint(pv.hover.c, pv.hover.r)
+        ) {
+          const p = cellTopP(pv.hover.c, pv.hover.r);
+          pctx.globalAlpha = 0.55;
+          pctx.drawImage(bt.canvas, p.x - bt.ax, p.y - bt.ay);
+          pctx.globalAlpha = 1;
+        }
+
+        pctx.setTransform(d, 0, 0, d, 0, 0);
+        if (pv.mouse && pv.hover)
+          hud(pctx, pv.mouse.x, pv.mouse.y, `CELL ${pv.hover.c},${pv.hover.r}`);
+      }
+      function updatePrevEmpty() {
+        const show = S.mode === "inspect" && !byUid(S.active);
+        const el = $("#prevEmpty");
+        el.innerHTML = !S.tiles.length
+          ? "<strong>Library masih kosong</strong><span>Kembali ke mode Source, crop beberapa diamond, lalu validasi di sini.</span>"
+          : "<strong>Pilih brush dulu</strong><span>Klik salah satu tile di Asset Library, lalu klik grid untuk melukis.</span>";
+        el.classList.toggle("hidden", !show);
+      }
+
+      /* ================================================================
+   INSPECT PANELS — seamless · pixel zoom · validation
+   ================================================================ */
+      function renderSeamless() {
+        const cv = $("#cvSeam"),
+          ctx = cv.getContext("2d");
+        const t = byUid(S.active);
+        $("#kvSeamTile").textContent = t ? `${t.name} (${t.wc}×${t.hc})` : "—";
+        if (!t) {
+          cv.width = 272;
+          cv.height = 120;
+          ctx.fillStyle = "#101214";
+          ctx.fillRect(0, 0, 272, 120);
+          ctx.fillStyle = "#5d615b";
+          ctx.font = '11px "IBM Plex Mono", monospace';
+          ctx.fillText("pilih tile di Asset Library", 20, 62);
+          return;
+        }
+        const N = seamN;
+        const C = N * t.wc,
+          R = N * t.hc,
+          hw = S.out.w / 2,
+          hh = S.out.h / 2;
+        const W = (C + R) * hw,
+          H = (C + R) * hh;
+        cv.width = Math.max(1, W);
+        cv.height = Math.max(1, H);
+        drawCheckerTo(ctx, 0, 0, W, H, Math.max(6, Math.round(hw / 4)));
+        ctx.imageSmoothingEnabled = false;
+        for (let j = 0; j < N; j++)
+          for (let i = 0; i < N; i++) {
+            const cx = (i * t.wc - j * t.hc) * hw,
+              cy = (i * t.wc + j * t.hc) * hh;
+            ctx.drawImage(t.canvas, cx - t.ax, cy - t.ay);
+          }
+      }
+      function renderPixelZoom() {
+        const cv = $("#cvPixel"),
+          t = byUid(S.active);
+        if (!t) {
+          cv.width = 272;
+          cv.height = 60;
+          const c = cv.getContext("2d");
+          c.fillStyle = "#101214";
+          c.fillRect(0, 0, 272, 60);
+          c.fillStyle = "#5d615b";
+          c.font = '11px "IBM Plex Mono", monospace';
+          c.fillText("pilih tile di Asset Library", 20, 32);
+          return;
+        }
+        const Z = pixZ;
+        cv.width = t.canvas.width * Z;
+        cv.height = t.canvas.height * Z;
+        const c = cv.getContext("2d");
+        drawCheckerTo(
+          c,
+          0,
+          0,
+          cv.width,
+          cv.height,
+          Math.max(6, 8 * Math.min(Z, 2)),
+        );
+        c.imageSmoothingEnabled = false;
+        c.drawImage(t.canvas, 0, 0, cv.width, cv.height);
+        if (Z >= 8) {
+          c.strokeStyle = "rgba(255,255,255,.12)";
+          c.lineWidth = 1;
+          c.beginPath();
+          for (let x = 0; x <= t.canvas.width; x++) {
+            c.moveTo(x * Z + 0.5, 0);
+            c.lineTo(x * Z + 0.5, cv.height);
+          }
+          for (let y = 0; y <= t.canvas.height; y++) {
+            c.moveTo(0, y * Z + 0.5);
+            c.lineTo(cv.width, y * Z + 0.5);
+          }
+          c.stroke();
+        }
+      }
+      function updateValidation() {
+        const items = [];
+        if (!S.img) {
+          items.push(["err", "Belum ada source image — import dulu."]);
+        } else {
+          const gr = S.grid.w / S.grid.h;
+          items.push(
+            Math.abs(gr - 2) < 0.02
+              ? ["ok", `Grid ratio 2:1 (${gr.toFixed(2)})`]
+              : ["warn", `Grid ratio ${gr.toFixed(2)}:1 — bukan 2:1`],
+          );
+          if (Math.abs(gr - S.out.w / S.out.h) > 0.02)
+            items.push([
+              "warn",
+              `Rasio grid ≠ rasio output ${S.out.w}×${S.out.h} — bentuk bisa terdistorsi`,
+            ]);
+          if (!S.srcInfo.hasAlpha)
+            items.push([
+              "info",
+              "Source RGB tanpa alpha — OK utk master ground",
+            ]);
+        }
+        const tiles = S.tiles.filter((t) => t.type === "tile");
+        const patches = S.tiles.filter((t) => t.type === "patch");
+        if (!S.tiles.length) {
+          items.push(["warn", "Library kosong — crop minimal satu tile."]);
+        } else {
+          items.push([
+            "ok",
+            `Library: ${tiles.length} tile · ${patches.length} patch`,
+          ]);
+          let outside = 0,
+            holes = 0;
+          for (const t of tiles) {
+            const w = t.canvas.width,
+              h = t.canvas.height;
+            const d = t.canvas.getContext("2d").getImageData(0, 0, w, h).data;
+            for (let y = 0; y < h; y++)
+              for (let x = 0; x < w; x++) {
+                const a = d[(y * w + x) * 4 + 3];
+                const A =
+                  ((x - t.ax + 0.5) / (S.out.w / 2) +
+                    (y + 0.5) / (S.out.h / 2)) /
+                  2;
+                const B =
+                  ((y + 0.5) / (S.out.h / 2) -
+                    (x - t.ax + 0.5) / (S.out.w / 2)) /
+                  2;
+                if (A >= 0 && A <= 1 && B >= 0 && B <= 1) {
+                  if (a === 0) holes++;
+                } else if (a > 0) outside++;
+              }
+          }
+          items.push(
+            outside === 0
+              ? ["ok", "Alpha luar diamond = 0 (semua tile)"]
+              : ["err", `Alpha bocor di luar diamond (${outside}px)`],
+          );
+          if (holes > 0)
+            items.push([
+              "info",
+              `Alpha di dalam diamond terdeteksi (${holes}px) — OK utk lubang/desain`,
+            ]);
+          if (S.proc.bg !== "none")
+            items.push([
+              "info",
+              `BG removal aktif: ${S.proc.bg}, tol ${S.proc.tol}`,
+            ]);
+        }
+        items.push([
+          "ok",
+          `Output: PNG RGBA ${S.out.w}×${S.out.h} · atlas + JSON`,
+        ]);
+        if (pv.map.size)
+          items.push(["ok", `Preview diorama: ${pv.map.size} asset terpasang`]);
+        $("#vlist").innerHTML = items
+          .map(([sev, txt]) => `<li class="${sev}">${txt}</li>`)
+          .join("");
+      }
+      function updateInspectPanels() {
+        renderSeamless();
+        renderPixelZoom();
+        updateValidation();
+      }
+
+      /* ================================================================
+   TEMPLATE STUDIO
+   ================================================================ */
+      function updateTGeom() {
+        tp.dh = clamp(Math.round(tp.dh), 4, 512);
+        tp.dw = 2 * tp.dh;
+        const hw = tp.dw / 2;
+        tp.ox = tp.W / 2 + ((tp.rows - tp.cols) * hw) / 2;
+        tp.oy = (tp.H - ((tp.cols + tp.rows) * tp.dh) / 2) / 2;
+      }
+      function autoDiamond() {
+        const pad = 48;
+        tp.dh = Math.max(
+          4,
+          Math.floor(
+            Math.min(tp.H - 2 * pad, (tp.W - 2 * pad) / 2) /
+              (tp.cols + tp.rows),
+          ),
+        );
+        updateTGeom();
+      }
+      function pruneTMap() {
+        for (const k of [...tp.map.keys()]) {
+          const i = k.indexOf(","),
+            c = +k.slice(0, i),
+            r = +k.slice(i + 1);
+          if (c >= tp.cols || r >= tp.rows || c < 0 || r < 0) tp.map.delete(k);
+        }
+      }
+      function applyTLayout(kind) {
+        tp.map.clear();
+        if (kind === "garden") {
+          for (let r = 0; r < tp.rows; r++)
+            for (let c = 0; c < tp.cols; c++) {
+              let m = "grass";
+              if (c >= tp.cols - 2) m = "water";
+              if (r >= 1 && r <= 2 && c >= 1 && c <= 3) m = "soil";
+              if (r === tp.rows - 2 && c < tp.cols - 2) m = "path";
+              tp.map.set(c + "," + r, m);
+            }
+        } else if (kind === "grass") {
+          for (let r = 0; r < tp.rows; r++)
+            for (let c = 0; c < tp.cols; c++) tp.map.set(c + "," + r, "grass");
+        }
+        renderTemplate();
+        updateTInfo();
+      }
+      function connectedT() {
+        const seen = new Set(),
+          out = [];
+        for (let r = 0; r < tp.rows; r++)
+          for (let c = 0; c < tp.cols; c++) {
+            const k = c + "," + r,
+              m = tp.map.get(k);
+            if (!m || seen.has(k)) continue;
+            const cells = [],
+              q = [[c, r]];
+            seen.add(k);
+            while (q.length) {
+              const [cc, rr] = q.pop();
+              cells.push({ c: cc, r: rr });
+              for (const [dc, dr] of [
+                [1, 0],
+                [-1, 0],
+                [0, 1],
+                [0, -1],
+              ]) {
+                const nk = cc + dc + "," + (rr + dr);
+                if (!seen.has(nk) && tp.map.get(nk) === m) {
+                  seen.add(nk);
+                  q.push([cc + dc, rr + dr]);
+                }
+              }
+            }
+            let sx = 0,
+              sy = 0;
+            for (const cell of cells) {
+              const t = cellTopT(cell.c, cell.r);
+              sx += t.x;
+              sy += t.y + tp.dh / 2;
+            }
+            out.push({
+              mat: m,
+              cells,
+              cx: sx / cells.length,
+              cy: sy / cells.length,
+            });
+          }
+        return out;
+      }
+      function borderEdgesT() {
+        const out = [];
+        for (let r = 0; r < tp.rows; r++)
+          for (let c = 0; c < tp.cols; c++) {
+            const m = tp.map.get(c + "," + r);
+            if (!m) continue;
+            for (const e of tEdges(c, r)) {
+              const [nc, nr] = e.n;
+              if (nc < 0 || nc >= tp.cols || nr < 0 || nr >= tp.rows) continue;
+              const nm = tp.map.get(nc + "," + nr);
+              if (nm && nm !== m) out.push(e);
+            }
+          }
+        return out;
+      }
+      function fitTemplate() {
+        const r = cvTmpl.getBoundingClientRect();
+        if (r.width < 10) return;
+        tpv.scale = clamp(
+          Math.min((r.width - 40) / tp.W, (r.height - 40) / tp.H),
+          0.02,
+          8,
+        );
+        tpv.x = (r.width - tp.W * tpv.scale) / 2;
+        tpv.y = (r.height - tp.H * tpv.scale) / 2;
+        tp.moved = false;
+      }
+      function tGridPath(c2d) {
+        c2d.beginPath();
+        for (let c = 0; c <= tp.cols; c++) {
+          const a = cellTopT(c, 0),
+            b = cellTopT(c, tp.rows);
+          c2d.moveTo(a.x, a.y);
+          c2d.lineTo(b.x, b.y);
+        }
+        for (let r = 0; r <= tp.rows; r++) {
+          const a = cellTopT(0, r),
+            b = cellTopT(tp.cols, r);
+          c2d.moveTo(a.x, a.y);
+          c2d.lineTo(b.x, b.y);
+        }
+      }
+      function renderTemplate() {
+        if (S.mode !== "template") return;
+        const { w, h } = fitCanvas(cvTmpl),
+          d = DPR();
+        tctx.setTransform(d, 0, 0, d, 0, 0);
+        tctx.fillStyle = "#0d0e11";
+        tctx.fillRect(0, 0, w, h);
+        tctx.setTransform(
+          d * tpv.scale,
+          0,
+          0,
+          d * tpv.scale,
+          d * tpv.x,
+          d * tpv.y,
+        );
+        tctx.fillStyle = "#101214";
+        tctx.fillRect(0, 0, tp.W, tp.H);
+        tctx.strokeStyle = "rgba(255,255,255,.25)";
+        tctx.lineWidth = 1 / tpv.scale;
+        tctx.strokeRect(0, 0, tp.W, tp.H);
+        for (let r = 0; r < tp.rows; r++)
+          for (let c = 0; c < tp.cols; c++) {
+            const m = tp.map.get(c + "," + r);
+            tctx.beginPath();
+            cellPathT(tctx, c, r);
+            tctx.fillStyle = m ? MATS[m].color : "#23262a";
+            tctx.fill();
+          }
+        tGridPath(tctx);
+        tctx.strokeStyle = "rgba(255,255,255,.5)";
+        tctx.lineWidth = 1.2 / tpv.scale;
+        tctx.stroke();
+        if (tp.borders) {
+          const be = borderEdgesT();
+          if (be.length) {
+            tctx.beginPath();
+            for (const e of be) {
+              tctx.moveTo(e.p1.x, e.p1.y);
+              tctx.lineTo(e.p2.x, e.p2.y);
+            }
+            tctx.strokeStyle = "#ffffff";
+            tctx.lineWidth = 3 / tpv.scale;
+            tctx.stroke();
+          }
+        }
+        if (tp.labels) drawTLabels(tctx);
+        if (tp.hover) {
+          tctx.beginPath();
+          cellPathT(tctx, tp.hover.c, tp.hover.r);
+          tctx.fillStyle = "rgba(240,179,74,.22)";
+          tctx.fill();
+          tctx.strokeStyle = "#efb34a";
+          tctx.lineWidth = 1.5 / tpv.scale;
+          tctx.stroke();
+        }
+        tctx.setTransform(d, 0, 0, d, 0, 0);
+        if (tp.mouse && tp.hover) {
+          const m = tp.map.get(tp.hover.c + "," + tp.hover.r);
+          hud(
+            tctx,
+            tp.mouse.x,
+            tp.mouse.y,
+            `CELL ${tp.hover.c},${tp.hover.r}${m ? " · " + MATS[m].label : ""}`,
+          );
+        }
+      }
+      function drawTLabels(c) {
+        const zones = connectedT();
+        if (!zones.length) return;
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        c.lineJoin = "round";
+        for (const z of zones) {
+          const size = clamp(
+            tp.dh * 0.18 * Math.sqrt(z.cells.length),
+            9,
+            tp.dh * 0.45,
+          );
+          c.font = `bold ${size}px Arial, sans-serif`;
+          const cx = clamp(z.cx, 40, tp.W - 40),
+            cy = clamp(z.cy, size, tp.H - size);
+          c.strokeStyle = "rgba(0,0,0,.85)";
+          c.lineWidth = size * 0.16;
+          c.strokeText(MATS[z.mat].label, cx, cy);
+          c.fillStyle = "#ffffff";
+          c.fillText(MATS[z.mat].label, cx, cy);
+        }
+      }
+
+      /* ---------- export template ---------- */
+      function buildTemplateImage(kind) {
+        const cv = makeCanvas(tp.W, tp.H),
+          c = cv.getContext("2d");
+        c.fillStyle = kind === "lines" ? "#060607" : "#101214";
+        c.fillRect(0, 0, tp.W, tp.H);
+        if (kind === "zones") {
+          for (let r = 0; r < tp.rows; r++)
+            for (let col = 0; col < tp.cols; col++) {
+              const m = tp.map.get(col + "," + r);
+              c.beginPath();
+              cellPathT(c, col, r);
+              c.fillStyle = m ? MATS[m].color : "#262a2e";
+              c.fill();
+            }
+        }
+        tGridPath(c);
+        c.strokeStyle = kind === "lines" ? "#ffffff" : "rgba(255,255,255,.65)";
+        c.lineWidth = kind === "lines" ? 2 : 1.5;
+        c.stroke();
+        if (tp.borders) {
+          const be = borderEdgesT();
+          if (be.length) {
+            c.beginPath();
+            for (const e of be) {
+              c.moveTo(e.p1.x, e.p1.y);
+              c.lineTo(e.p2.x, e.p2.y);
+            }
+            c.strokeStyle = "#ffffff";
+            c.lineWidth = kind === "lines" ? 4 : 3;
+            c.stroke();
+          }
+        }
+        if (kind === "zones" && tp.labels) drawTLabels(c);
+        return cv;
+      }
+      function buildManifest() {
+        const byMat = {};
+        for (const [k, m] of tp.map) {
+          const i = k.indexOf(",");
+          (byMat[m] ||= []).push([+k.slice(0, i), +k.slice(i + 1)]);
+        }
+        return {
+          generator: "TILTH — isometric template",
+          canvas: { width: tp.W, height: tp.H },
+          grid: {
+            diamond_w: tp.dw,
+            diamond_h: tp.dh,
+            origin_x: +tp.ox.toFixed(1),
+            origin_y: +tp.oy.toFixed(1),
+            cols: tp.cols,
+            rows: tp.rows,
+          },
+          zones: byMat,
+          note: "Import file ini di TILTH mode Source (Import manifest) sebelum cropping hasil AI.",
+        };
+      }
+      function buildTemplatePrompt(kind) {
+        const zones = connectedT();
+        const used = [...new Set(zones.map((z) => z.mat))];
+        const L = [];
+        L.push(
+          `Use the attached image as an EXACT structural template for a top-down isometric game ground asset. The image shows an isometric diamond grid (${tp.dw}x${tp.dh} px diamonds, ${tp.cols}x${tp.rows} cells). Every straight line is a structural edge: keep every line EXACTLY where it is — do not move, rotate, rescale, or remove any line, do not merge or add cells, and keep the composition, framing and proportions of the template unchanged.`,
+        );
+        if (kind === "zones") {
+          L.push(
+            "",
+            "Fill each flat color-coded zone with exactly one ground material (render the material texture, keep the zone shape):",
+          );
+          for (const m of used)
+            L.push(`- the ${MATS[m].cname} zone -> ${MATS[m].prompt}.`);
+          if (tp.map.size < tp.cols * tp.rows)
+            L.push(
+              "- the dark grey cells -> any single natural garden ground material of your choice that fits the scene.",
+            );
+        } else {
+          L.push(
+            "",
+            "The thicker lines mark boundaries between different ground material zones. Assign materials per zone as follows:",
+          );
+          if (used.length)
+            for (const m of used)
+              L.push(`- one zone type -> ${MATS[m].prompt}.`);
+          else
+            L.push(
+              "- render the whole diamond area as one cohesive garden ground material of your choice.",
+            );
+          L.push(
+            "You may freely decide which zone gets which material, but never cross a thick boundary line.",
+          );
+        }
+        L.push(
+          "",
+          "Render as flat 16-bit pixel art game asset, orthographic isometric 2:1 projection with zero perspective distortion, cohesive earthy palette, even ambient lighting, flat ground textures only — seamless and tileable.",
+        );
+        L.push(
+          "Strictly no cast shadows, no vignette, no frame or border, do not reproduce any text or labels from the template, no watermark, no elevated objects, no plants with height, no characters.",
+        );
+        return L.join("\n");
+      }
+      async function exportTemplateAll() {
+        const files = [
+          [
+            `zone_map_${tp.W}x${tp.H}.png`,
+            await canvasBlob(buildTemplateImage("zones")),
+          ],
+          [
+            `grid_lines_${tp.W}x${tp.H}.png`,
+            await canvasBlob(buildTemplateImage("lines")),
+          ],
+          [
+            "template_manifest.json",
+            new Blob([JSON.stringify(buildManifest(), null, 2)], {
+              type: "application/json",
+            }),
+          ],
+          [
+            "template_prompt.txt",
+            new Blob([buildPromptFileText()], { type: "text/plain" }),
+          ],
+        ];
+        for (const [name, blob] of files) {
+          download(blob, name);
+          await sleep(350);
+        }
+        toast(`Export ${files.length} file template — siap dikirim ke AI`);
+      }
+      function buildPromptFileText() {
+        return [
+          "=== PROMPT A — pakai bersama zone_map PNG (image reference / img2img) ===",
+          "",
+          buildTemplatePrompt("zones"),
+          "",
+          "=== PROMPT B — pakai bersama grid_lines PNG (ControlNet Lineart / Canny) ===",
+          "",
+          buildTemplatePrompt("lines"),
+          "",
+          "Setting TILTH setelah hasil AI diimport: diamond sesuai manifest JSON (tombol Import manifest di mode Source).",
+        ].join("\n");
+      }
+
+      /* ---------- prompt preset single-material (pendekatan B) ---------- */
+      function buildMaterialPrompt() {
+        const custom = $("#pmCustom").value.trim();
+        const m = MATS[$("#pmMat").value];
+        const desc = custom || m.prompt;
+        const variants = custom
+          ? "berikan variasi alami yang halus antar diamond yang berdekatan"
+          : m.variants;
+        const style = $("#pmStyle").value;
+        const STYLE = {
+          pixel: "Flat 16-bit pixel art, warm earthy palette.",
+          paint:
+            "Soft hand-painted style with visible brushwork, earthy palette.",
+          flat: "Clean flat style with solid colors and minimal shading.",
+          snes: "Retro 16-bit SNES style with a limited palette.",
+        }[style];
+        return [
+          "Create a single-material isometric ground source image for a cozy garden game.",
+          "",
+          "Strict orthographic isometric projection on a 2:1 diamond lattice (~256×128 px diamonds), flat ground plane only, camera looking straight down the isometric axis, zero perspective distortion. Wide landscape composition.",
+          "",
+          `The ENTIRE image is ONE material: ${desc}.`,
+          `Provide natural variation between neighboring diamonds — ${variants} — so several diamonds can be cropped as distinct tile variants of the same material.`,
+          "",
+          `${STYLE} Even ambient lighting, no cast shadows, no vignette, full-bleed texture to the very edges.`,
+          "",
+          "Absolutely no other materials, no paths, no water, no zone borders, no elevated objects, no plants with height, no characters, no text, no UI, no watermark.",
+          `This image will be diamond-cropped into ${S.out.w}×${S.out.h} isometric ground tiles — keep the texture evenly detailed across the whole surface, including the outer edges.`,
+        ].join("\n");
+      }
+
+      /* ---------- edit zone + undo ---------- */
+      function serializeT() {
+        return JSON.stringify([...tp.map]);
+      }
+      function loadT(s) {
+        tp.map = new Map(JSON.parse(s));
+      }
+      function pushTUndo() {
+        tp.undo.push(serializeT());
+        if (tp.undo.length > 60) tp.undo.shift();
+        tp.redo.length = 0;
+        updateTUndoBtns();
+      }
+      function doTUndo() {
+        if (!tp.undo.length) return;
+        tp.redo.push(serializeT());
+        loadT(tp.undo.pop());
+        renderTemplate();
+        updateTInfo();
+        updateTUndoBtns();
+      }
+      function doTRedo() {
+        if (!tp.redo.length) return;
+        tp.undo.push(serializeT());
+        loadT(tp.redo.pop());
+        renderTemplate();
+        updateTInfo();
+        updateTUndoBtns();
+      }
+      function updateTUndoBtns() {
+        $("#tbTUndo").classList.toggle("dis", !tp.undo.length);
+        $("#tbTRedo").classList.toggle("dis", !tp.redo.length);
+      }
+      function paintT(c, r) {
+        if (c >= 0 && r >= 0 && c < tp.cols && r < tp.rows)
+          tp.map.set(c + "," + r, tp.mat);
+      }
+      function eraseT(c, r) {
+        tp.map.delete(c + "," + r);
+      }
+      function fillT(c, r) {
+        if (c < 0 || r < 0 || c >= tp.cols || r >= tp.rows) return false;
+        const target = tp.map.get(c + "," + r);
+        if (target === tp.mat) return false;
+        const q = [[c, r]],
+          seen = new Set([c + "," + r]);
+        while (q.length) {
+          const [cc, rr] = q.pop();
+          tp.map.set(cc + "," + rr, tp.mat);
+          for (const [dc, dr] of [
+            [1, 0],
+            [-1, 0],
+            [0, 1],
+            [0, -1],
+          ]) {
+            const nk = cc + dc + "," + (rr + dr);
+            if (!seen.has(nk) && tp.map.get(nk) === target) {
+              seen.add(nk);
+              q.push([cc + dc, rr + dr]);
+            }
+          }
+        }
+        return true;
+      }
+      function applyTStroke(p) {
+        const cell = cellAtT(...toWorldT(p));
+        if (ptrT.kind === "paint") {
+          if (!ptrT.pushed) {
+            pushTUndo();
+            ptrT.pushed = true;
+          }
+          paintT(cell.c, cell.r);
+        } else if (ptrT.kind === "erase") {
+          if (!ptrT.pushed) {
+            pushTUndo();
+            ptrT.pushed = true;
+          }
+          eraseT(cell.c, cell.r);
+        }
+        renderTemplate();
+        updateTInfo();
+      }
+      function updateTInfo() {
+        $("#kvTOrigin").textContent =
+          `${Math.round(tp.ox)}, ${Math.round(tp.oy)}`;
+        $("#inTDH").value = tp.dh;
+        $("#inTDW").value = tp.dw;
+        $("#kvTZones").textContent =
+          `${tp.map.size} / ${tp.cols * tp.rows} cells · ${connectedT().length} zona`;
+        $$("#segTPreset button").forEach((b) =>
+          b.classList.toggle(
+            "on",
+            +b.dataset.w === tp.W && +b.dataset.h === tp.H,
+          ),
+        );
+      }
+      function renderTPalette() {
+        const el = $("#tPalette");
+        el.innerHTML = "";
+        for (const [id, m] of Object.entries(MATS)) {
+          const b = document.createElement("button");
+          b.className = "swatch" + (tp.mat === id ? " on" : "");
+          b.dataset.m = id;
+          b.innerHTML = `<span class="dot" style="background:${m.color}"></span>${m.dis}`;
+          el.appendChild(b);
+        }
+      }
+
+      /* ================================================================
+   EXPORT TILESET
+   ================================================================ */
+      function download(blob, name) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          URL.revokeObjectURL(a.href);
+          a.remove();
+        }, 500);
+      }
+      const canvasBlob = (cv) =>
+        new Promise((res) => cv.toBlob(res, "image/png"));
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+      function buildPreviewPng() {
+        const hw = S.out.w / 2,
+          hh = S.out.h / 2;
+        const cv = makeCanvas(
+          (pv.cols + pv.rows) * hw,
+          (pv.cols + pv.rows) * hh,
+        );
+        const c = cv.getContext("2d");
+        c.imageSmoothingEnabled = false;
+        c.translate(pv.rows * hw, 0);
+        for (const e of entriesSorted()) {
+          const t = byUid(e.uid);
+          if (!t) continue;
+          c.drawImage(
+            t.canvas,
+            (e.c - e.r) * hw - t.ax,
+            (e.c + e.r) * hh - t.ay,
+          );
+        }
+        return cv;
+      }
+      function uniqueNameOf() {
+        const used = new Set(),
+          m = new Map();
+        for (const t of S.tiles) {
+          let n = t.name || t.type,
+            i = 2;
+          while (used.has(n)) n = `${t.name}_${i++}`;
+          used.add(n);
+          m.set(t.uid, n);
+        }
+        return (t) => m.get(t.uid);
+      }
+      async function exportAll() {
+        if (!S.tiles.length) {
+          toast(
+            "Asset library masih kosong — crop minimal satu tile dulu.",
+            "warn",
+          );
+          return;
+        }
+        const nameOf = uniqueNameOf();
+        const tiles = S.tiles.filter((t) => t.type === "tile");
+        const patches = S.tiles.filter((t) => t.type === "patch");
+        const meta = {
+          generator: "TILTH — ai asset preparation editor",
+          tile_width: S.out.w,
+          tile_height: S.out.h,
+          resample: S.out.resample,
+          processing: { ...S.proc },
+          tiles: [],
+          patches: [],
+        };
+        const files = [];
+        if (tiles.length) {
+          const cols = 8,
+            rows = Math.ceil(tiles.length / cols);
+          const cv = makeCanvas(cols * S.out.w, rows * S.out.h),
+            c = cv.getContext("2d");
+          tiles.forEach((t, i) => {
+            const x = (i % cols) * S.out.w,
+              y = Math.floor(i / cols) * S.out.h;
+            c.drawImage(t.canvas, x, y);
+            meta.tiles.push({
+              id: nameOf(t),
+              atlas_x: x,
+              atlas_y: y,
+              width: t.canvas.width,
+              height: t.canvas.height,
+            });
+          });
+          files.push(["ground_tiles.png", await canvasBlob(cv)]);
+        }
+        if (patches.length) {
+          const pad = 4;
+          let maxW = 1024;
+          patches.forEach(
+            (t) => (maxW = Math.max(maxW, t.canvas.width + pad * 2)),
+          );
+          let x = pad,
+            y = pad,
+            rowH = 0;
+          const placed = [];
+          for (const t of patches) {
+            if (x + t.canvas.width + pad > maxW) {
+              x = pad;
+              y += rowH + pad;
+              rowH = 0;
+            }
+            placed.push([t, x, y]);
+            x += t.canvas.width + pad;
+            rowH = Math.max(rowH, t.canvas.height);
+          }
+          const cv = makeCanvas(maxW, y + rowH + pad),
+            c = cv.getContext("2d");
+          patches.forEach((t, i) => {
+            const [, px, py] = placed[i];
+            c.drawImage(t.canvas, px, py);
+            meta.patches.push({
+              id: nameOf(t),
+              atlas_x: px,
+              atlas_y: py,
+              width: t.canvas.width,
+              height: t.canvas.height,
+              cells_w: t.wc,
+              cells_h: t.hc,
+              anchor_x: Math.round(t.ax),
+            });
+          });
+          files.push(["ground_patches.png", await canvasBlob(cv)]);
+        }
+        files.push([
+          "ground_tiles.json",
+          new Blob([JSON.stringify(meta, null, 2)], {
+            type: "application/json",
+          }),
+        ]);
+        if (pv.map.size)
+          files.push([
+            "ground_preview.png",
+            await canvasBlob(buildPreviewPng()),
+          ]);
+        for (const [name, blob] of files) {
+          download(blob, name);
+          await sleep(350);
+        }
+        toast(
+          `Export ${files.length} file: ${files.map((f) => f[0]).join(", ")}`,
+        );
+      }
+
+      /* ================================================================
+   SAMPLE DIORAMA
+   ================================================================ */
+      function generateSample() {
+        const C = 7,
+          R = 6,
+          hw = 128,
+          hh = 64,
+          pad = 88;
+        const W = (C + R) * hw + pad * 2,
+          H = (C + R) * hh + pad * 2;
+        const ox = pad + R * hw,
+          oy = pad;
+        const T = Array.from({ length: R }, () => Array(C).fill("G"));
+        for (let r = 0; r < R; r++) {
+          T[r][C - 2] = "W";
+          T[r][C - 1] = "W";
+        }
+        [
+          [1, 1],
+          [1, 2],
+          [2, 1],
+          [2, 2],
+          [2, 3],
+        ].forEach(([r, c]) => (T[r][c] = "S"));
+        for (let c = 0; c <= C - 3; c++) T[4][c] = "P";
+        T[5][C - 3] = "P";
+        const cv = makeCanvas(W, H),
+          ctx = cv.getContext("2d");
+        const id = ctx.createImageData(W, H),
+          D = id.data;
+        const BASE = { G: [82, 126, 60], W: [50, 108, 146], S: [122, 92, 62] };
+        const GRAVEL = [
+          [186, 166, 124],
+          [160, 140, 98],
+          [196, 178, 138],
+          [148, 128, 88],
+        ];
+        const FLOWER = [
+          [226, 120, 150],
+          [232, 200, 92],
+          [238, 238, 230],
+        ];
+        for (let y = 0; y < H; y++)
+          for (let x = 0; x < W; x++) {
+            const a = ((x - ox) / hw + (y - oy) / hh) / 2,
+              b = ((y - oy) / hh - (x - ox) / hw) / 2;
+            const c = Math.floor(a),
+              r = Math.floor(b);
+            if (c < 0 || c >= C || r < 0 || r >= R) continue;
+            const t = T[r][c],
+              fa = a - c,
+              fb = b - r;
+            const n1 = hash2(x, y),
+              n2 = hash2(x >> 3, y >> 3),
+              cs = hash2(c * 7 + 13, r * 11 + 29);
+            let R8, G8, B8;
+            if (t === "P") {
+              const g = GRAVEL[(n1 * 4) | 0];
+              R8 = g[0];
+              G8 = g[1];
+              B8 = g[2];
+            } else {
+              const bs = BASE[t];
+              const v = (n2 - 0.5) * 26 + (n1 - 0.5) * 10 + (cs - 0.5) * 8;
+              R8 = bs[0] + v;
+              G8 = bs[1] + v;
+              B8 = bs[2] + v * 0.8;
+              if (t === "G" && n1 > 0.94) {
+                R8 += 16;
+                G8 += 22;
+                B8 += 6;
+              }
+              if (t === "W" && n1 > 0.985) {
+                R8 = 152;
+                G8 = 206;
+                B8 = 226;
+              }
+              if (t === "S" && n1 > 0.968) {
+                R8 = 158;
+                G8 = 134;
+                B8 = 102;
+              }
+              if (t === "G") {
+                const f = hash2(x * 3 + 11, y * 5 + 7);
+                if (f > 0.9935 && cs > 0.3) {
+                  const fl = FLOWER[Math.floor(f * 997) % 3];
+                  R8 = fl[0];
+                  G8 = fl[1];
+                  B8 = fl[2];
+                }
+              }
+            }
+            const e = 0.045;
+            const nb = (cc, rr) =>
+              cc >= 0 && cc < C && rr >= 0 && rr < R ? T[rr][cc] : t;
+            if (
+              (fa < e && nb(c - 1, r) !== t) ||
+              (fa > 1 - e && nb(c + 1, r) !== t) ||
+              (fb < e && nb(c, r - 1) !== t) ||
+              (fb > 1 - e && nb(c, r + 1) !== t)
+            ) {
+              R8 *= 0.72;
+              G8 *= 0.72;
+              B8 *= 0.72;
+            }
+            const i = (y * W + x) * 4;
+            D[i] = c255(R8);
+            D[i + 1] = c255(G8);
+            D[i + 2] = c255(B8);
+            D[i + 3] = 255;
+          }
+        ctx.putImageData(id, 0, 0);
+        return { canvas: cv, ox, oy };
+      }
+      function loadSample() {
+        const s = generateSample();
+        setSourceImage(s.canvas, "sample_diorama.png", 0);
+        S.grid.w = 256;
+        S.grid.h = 128;
+        S.grid.ox = s.ox;
+        S.grid.oy = s.oy;
+        syncInputs();
+        fitView();
+        renderSource();
+        updateStatus();
+        updateLive();
+        updateInspectPanels();
+        toast(
+          "Sample diorama siap — coba Select (S) + drag, atau Crop tile (T)",
+        );
+      }
+
+      /* ================================================================
+   IMAGE / PROJECT LOAD & SAVE
+   ================================================================ */
+      function analyzeSource() {
+        let has = false;
+        const d = S.img.getContext("2d").getImageData(0, 0, S.iw, S.ih).data;
+        for (let i = 3; i < d.length; i += 4) {
+          if (d[i] < 255) {
+            has = true;
+            break;
+          }
+        }
+        S.srcInfo = { hasAlpha: has, colorMode: has ? "RGBA" : "RGB" };
+      }
+      function fmtBytes(b) {
+        if (!b) return "—";
+        return b > 1048576
+          ? (b / 1048576).toFixed(1) + " MB"
+          : Math.round(b / 1024) + " KB";
+      }
+      function setSourceImage(img, name, bytes = 0) {
+        setMode("source");
+        const w = img.naturalWidth || img.width,
+          h = img.naturalHeight || img.height;
+        const cv = makeCanvas(w, h);
+        cv.getContext("2d").drawImage(img, 0, 0);
+        S.img = cv;
+        S.iw = w;
+        S.ih = h;
+        S.fileName = name;
+        S.fileBytes = bytes;
+        S.imgId++;
+        S.grid.ox = Math.round(w / 2);
+        S.grid.oy = Math.round(h / 2);
+        analyzeSource();
+        S.sel.clear();
+        S.calib.pts = [];
+        patchSel = null;
+        selDrag = null;
+        $("#dropzone").classList.add("hidden");
+        $("#ivFile").textContent = name;
+        $("#ivSize").textContent = `${w} × ${h} px`;
+        $("#ivColor").textContent =
+          S.srcInfo.colorMode + (S.srcInfo.hasAlpha ? " (alpha)" : " (opaque)");
+        $("#ivAlpha").textContent = S.srcInfo.hasAlpha ? "ya" : "tidak";
+        $("#ivBytes").textContent = bytes ? fmtBytes(bytes) : "generated";
+        $("#ivNote").hidden = S.srcInfo.hasAlpha;
+        syncInputs();
+        fitView();
+        renderSource();
+        updateStatus();
+        updateLive();
+        updateInspectPanels();
+      }
+      function loadFile(file) {
+        if (!file || !/^image\//.test(file.type)) {
+          toast("File bukan gambar.", "warn");
+          return;
+        }
+        const url = URL.createObjectURL(file),
+          im = new Image();
+        im.onload = () => {
+          URL.revokeObjectURL(url);
+          setSourceImage(im, file.name, file.size);
+          toast(`${file.name} dimuat`);
+        };
+        im.onerror = () => toast("Gagal membaca gambar.", "warn");
+        im.src = url;
+      }
+      function importManifestJson(m) {
+        const g = m.grid || m;
+        if (!g.diamond_w || !g.diamond_h) throw 0;
+        S.grid.w = g.diamond_w;
+        S.grid.h = g.diamond_h;
+        if (typeof g.origin_x === "number") S.grid.ox = Math.round(g.origin_x);
+        if (typeof g.origin_y === "number") S.grid.oy = Math.round(g.origin_y);
+        toast(
+          `Manifest dimuat — grid ${g.diamond_w}×${g.diamond_h}${g.cols ? `, ${g.cols}×${g.rows} cell` : ""}`,
+        );
+        syncInputs();
+        renderSource();
+        updateLive();
+        updateStatus();
+        updateInspectPanels();
+      }
+      function copyText(txt) {
+        const fallback = () => {
+          const ta = document.createElement("textarea");
+          ta.value = txt;
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand("copy");
+            toast("Teks dicopy ke clipboard");
+          } catch (e) {
+            toast("Gagal copy", "warn");
+          }
+          ta.remove();
+        };
+        if (navigator.clipboard && window.isSecureContext)
+          navigator.clipboard
+            .writeText(txt)
+            .then(() => toast("Teks dicopy ke clipboard"))
+            .catch(fallback);
+        else fallback();
+      }
+      function loadImageURL(url) {
+        return new Promise((res, rej) => {
+          const im = new Image();
+          im.onload = () => res(im);
+          im.onerror = rej;
+          im.src = url;
+        });
+      }
+      const projName = () =>
+        (S.fileName.replace(/\.[^.]+$/, "") || "tilth-project").replace(
+          /\s+/g,
+          "_",
+        );
+
+      function buildProject() {
+        return {
+          generator: "TILTH",
+          version: 1,
+          name: projName(),
+          source: {
+            name: S.fileName,
+            width: S.iw,
+            height: S.ih,
+            color_mode: S.srcInfo.colorMode,
+            has_alpha: S.srcInfo.hasAlpha,
+            dataURL: S.img ? S.img.toDataURL("image/png") : null,
+          },
+          grid: {
+            diamond_width: S.grid.w,
+            diamond_height: S.grid.h,
+            origin_x: Math.round(S.grid.ox),
+            origin_y: Math.round(S.grid.oy),
+          },
+          out: { ...S.out },
+          proc: { ...S.proc },
+          assets: S.tiles.map((t) => ({
+            name: t.name,
+            type: t.type,
+            wc: t.wc,
+            hc: t.hc,
+            source_cell: {
+              c: t.src.c0,
+              r: t.src.r0,
+              gw: t.src.gw,
+              gh: t.src.gh,
+              gox: t.src.gox,
+              goy: t.src.goy,
+            },
+          })),
+          preview: {
+            cols: pv.cols,
+            rows: pv.rows,
+            map: [...pv.map].map(([k, e]) => [
+              k,
+              S.tiles.findIndex((t) => t.uid === e.uid),
+              e.wc,
+              e.hc,
+            ]),
+          },
+          template: {
+            W: tp.W,
+            H: tp.H,
+            cols: tp.cols,
+            rows: tp.rows,
+            dh: tp.dh,
+            mat: tp.mat,
+            map: [...tp.map],
+          },
+        };
+      }
+      function saveProject() {
+        if (!S.img && !S.tiles.length) {
+          toast("Belum ada yang bisa disimpan.", "warn");
+          return;
+        }
+        const j = buildProject();
+        download(
+          new Blob([JSON.stringify(j)], { type: "application/json" }),
+          j.name + ".tilth.json",
+        );
+        toast(`Project "${j.name}" disimpan · ${S.tiles.length} asset`);
+      }
+      async function loadProject(j) {
+        try {
+          if (!j.source || !j.source.dataURL) throw 0;
+          const im = await loadImageURL(j.source.dataURL);
+          S.tiles = [];
+          S.active = null;
+          S.sel.clear();
+          S.calib.pts = [];
+          pv.map.clear();
+          pv.undo = [];
+          pv.redo = [];
+          pvFitted = false;
+          tp.map = [];
+          tp.map = new Map();
+          tp.undo = [];
+          tp.redo = [];
+          patchSel = null;
+          selDrag = null;
+          setSourceImage(im, j.source.name || "project.png", 0);
+          if (j.grid)
+            Object.assign(S.grid, {
+              w: j.grid.diamond_width ?? j.grid.w,
+              h: j.grid.diamond_height ?? j.grid.h,
+              ox: j.grid.origin_x ?? j.grid.ox,
+              oy: j.grid.origin_y ?? j.grid.oy,
+            });
+          if (j.out) Object.assign(S.out, j.out);
+          if (j.proc) Object.assign(S.proc, j.proc);
+          (j.assets || []).forEach((a) =>
+            S.tiles.push({
+              uid: S.uidSeq++,
+              name: a.name,
+              type: a.type,
+              wc: a.wc,
+              hc: a.hc,
+              canvas: makeCanvas(4, 4),
+              ax: 0,
+              ay: 0,
+              src: {
+                c0: a.source_cell.c,
+                r0: a.source_cell.r,
+                gw: a.source_cell.gw,
+                gh: a.source_cell.gh,
+                gox: a.source_cell.gox,
+                goy: a.source_cell.goy,
+              },
+            }),
+          );
+          S.tiles.forEach((t) => {
+            t.src.imgId = S.imgId;
+          });
+          S.tiles.forEach((t) => {
+            if (!recropTile(t)) {
+              const P = t.wc + t.hc,
+                ow = Math.max(1, Math.round((P * S.out.w) / 2)),
+                oh = Math.max(1, Math.round((P * S.out.h) / 2));
+              t.canvas = makeCanvas(ow, oh);
+              t.ax = (t.hc / P) * ow;
+            }
+          });
+          if (S.tiles.length) S.active = S.tiles[0].uid;
+          const pj = j.preview || {};
+          pv.cols = pj.cols || 12;
+          pv.rows = pj.rows || 12;
+          pv.map = new Map(
+            (pj.map || [])
+              .filter((e) => S.tiles[e[1]])
+              .map(([k, idx, wc, hc]) => [
+                k,
+                { uid: S.tiles[idx].uid, wc, hc },
+              ]),
+          );
+          const tj = j.template || {};
+          if (tj.map) {
+            Object.assign(tp, {
+              W: tj.W || 1536,
+              H: tj.H || 1024,
+              cols: tj.cols || 8,
+              rows: tj.rows || 6,
+              dh: tj.dh || 52,
+              mat: tj.mat || "grass",
+            });
+            tp.map = new Map(tj.map);
+            updateTGeom();
+          }
+          syncInputs();
+          syncProcInputs();
+          renderTPalette();
+          updateTInfo();
+          fitView();
+          renderSource();
+          updateLive();
+          renderLibrary();
+          updateBrushBox();
+          updatePrevEmpty();
+          updateSelUI();
+          updateInspectPanels();
+          toast(
+            `Project "${j.name || "untitled"}" dibuka — ${S.tiles.length} asset`,
+          );
+        } catch (e) {
+          toast("File project tidak valid.", "warn");
+        }
+      }
+      function newProject() {
+        setMode("source");
+        S.img = null;
+        S.iw = 0;
+        S.ih = 0;
+        S.fileName = "";
+        S.fileBytes = 0;
+        S.imgId++;
+        S.srcInfo = { hasAlpha: false, colorMode: "—" };
+        S.tiles = [];
+        S.active = null;
+        S.sel.clear();
+        S.calib.pts = [];
+        pv.map.clear();
+        pv.undo = [];
+        pv.redo = [];
+        pvFitted = false;
+        tp.map.clear();
+        tp.undo = [];
+        tp.redo = [];
+        patchSel = null;
+        selDrag = null;
+        S.hoverCell = null;
+        S.mouse = null;
+        $("#dropzone").classList.remove("hidden");
+        ["ivFile", "ivSize", "ivColor", "ivAlpha", "ivBytes"].forEach(
+          (id) => ($("#" + id).textContent = "—"),
+        );
+        $("#ivNote").hidden = true;
+        syncInputs();
+        syncProcInputs();
+        renderLibrary();
+        updateBrushBox();
+        updatePrevEmpty();
+        updateSelUI();
+        renderSource();
+        updateLive();
+        updateInspectPanels();
+        toast("Project baru dimulai");
+      }
+
+      /* ================================================================
+   VIEW / ZOOM / PAN
+   ================================================================ */
+      function zoomAt(v, px, py, f) {
+        const ns = clamp(v.scale * f, 0.02, 40);
+        f = ns / v.scale;
+        v.x = px - (px - v.x) * f;
+        v.y = py - (py - v.y) * f;
+        v.scale = ns;
+        v.moved = true;
+      }
+      function fitView() {
+        if (!S.img) return;
+        const r = cvSrc.getBoundingClientRect();
+        if (r.width < 10) return;
+        view.scale = clamp(
+          Math.min((r.width - 60) / S.iw, (r.height - 60) / S.ih),
+          0.03,
+          8,
+        );
+        view.x = (r.width - S.iw * view.scale) / 2;
+        view.y = (r.height - S.ih * view.scale) / 2;
+        view.moved = false;
+      }
+      function zoomCenter(f) {
+        const cv =
+          S.mode === "source" ? cvSrc : S.mode === "inspect" ? cvPrev : cvTmpl;
+        const v = S.mode === "source" ? view : S.mode === "inspect" ? pv : tpv;
+        const r = cv.getBoundingClientRect();
+        zoomAt(v, r.width / 2, r.height / 2, f);
+        S.mode === "source"
+          ? renderSource()
+          : S.mode === "inspect"
+            ? renderPreview()
+            : renderTemplate();
+        updateStatus();
+      }
+
+      /* ================================================================
+   EVENTS — source canvas
+   ================================================================ */
+      cvSrc.addEventListener("contextmenu", (e) => e.preventDefault());
+      cvSrc.addEventListener("pointerdown", (e) => {
+        if (!S.img) return;
+        e.preventDefault();
+        cvSrc.setPointerCapture(e.pointerId);
+        const p = evPos(e, cvSrc);
+        if (e.button === 1 || e.button === 2 || S.space || S.tool === "hand") {
+          ptrS = { kind: "pan", x: p.x, y: p.y, vx: view.x, vy: view.y };
+          cvSrc.style.cursor = "grabbing";
+          return;
+        }
+        if (e.button !== 0) return;
+        const [wx, wy] = toWorld(p),
+          cell = cellAt(wx, wy);
+        if (S.tool === "calib") {
+          S.calib.pts.push({ x: wx, y: wy });
+          if (S.calib.pts.length >= 4) applyCalibration();
+          else renderSource();
+          return;
+        }
+        if (S.tool === "select") {
+          selDrag = { x0: wx, y0: wy, x1: wx, y1: wy, sx: p.x, sy: p.y };
+          renderSource();
+          return;
+        }
+        if (S.tool === "tile") commitCrop(cell.c, cell.r, 1, 1);
+        else if (S.tool === "patch") {
+          patchSel = { c0: cell.c, r0: cell.r, c1: cell.c, r1: cell.r };
+          renderSource();
+          updateLive();
+        } else if (S.tool === "origin") {
+          S.grid.ox = Math.round(wx);
+          S.grid.oy = Math.round(wy);
+          syncInputs();
+          renderSource();
+          updateLive();
+          toast(`Origin grid → ${S.grid.ox}, ${S.grid.oy}`);
+        }
+      });
+      cvSrc.addEventListener("pointermove", (e) => {
+        if (!S.img) return;
+        const p = evPos(e, cvSrc);
+        S.mouse = p;
+        if (ptrS && ptrS.kind === "pan") {
+          view.x = ptrS.vx + (p.x - ptrS.x);
+          view.y = ptrS.vy + (p.y - ptrS.y);
+          view.moved = true;
+          renderSource();
+          updateStatus();
+          return;
+        }
+        const [wx, wy] = toWorld(p);
+        if (selDrag) {
+          selDrag.x1 = wx;
+          selDrag.y1 = wy;
+        }
+        const cell = cellAt(wx, wy);
+        const changed =
+          !S.hoverCell || S.hoverCell.c !== cell.c || S.hoverCell.r !== cell.r;
+        S.hoverCell = cell;
+        if (patchSel) {
+          patchSel.c1 = cell.c;
+          patchSel.r1 = cell.r;
+        }
+        renderSource();
+        if (changed) updateLive();
+        updateStatus();
+      });
+      const endPtrS = () => {
+        if (ptrS && ptrS.kind === "pan") {
+          ptrS = null;
+          cvSrc.style.cursor = S.tool === "hand" ? "grab" : "crosshair";
+          return;
+        }
+        if (selDrag) {
+          const movedPx =
+            Math.hypot(selDrag.x1 - selDrag.x0, selDrag.y1 - selDrag.y0) *
+            view.scale;
+          if (movedPx < 5) {
+            const t = cellTop(
+              selDrag.x1 === undefined ? 0 : cellAt(selDrag.x1, selDrag.y1).c,
+              0,
+            ); // noop guard
+            const cell = cellAt(selDrag.x1, selDrag.y1);
+            const ct = cellTop(cell.c, cell.r);
+            if (
+              ct.x >= -S.grid.w &&
+              ct.x <= S.iw + S.grid.w &&
+              ct.y >= -S.grid.h &&
+              ct.y <= S.ih + S.grid.h
+            )
+              toggleSelCell(cell.c, cell.r);
+          } else {
+            marqueeCells(selDrag).forEach((k) => S.sel.add(k));
+            updateSelUI();
+          }
+          selDrag = null;
+          renderSource();
+          return;
+        }
+        if (patchSel) {
+          const n = normRect();
+          commitCrop(n.cA, n.rA, n.wc, n.hc);
+          patchSel = null;
+          renderSource();
+          updateLive();
+        }
+      };
+      cvSrc.addEventListener("pointerup", endPtrS);
+      cvSrc.addEventListener("pointercancel", endPtrS);
+      cvSrc.addEventListener("pointerleave", () => {
+        if (ptrS) return;
+        S.mouse = null;
+        S.hoverCell = null;
+        renderSource();
+        updateStatus();
+        updateLive();
+      });
+      cvSrc.addEventListener(
+        "wheel",
+        (e) => {
+          e.preventDefault();
+          if (!S.img) return;
+          const p = evPos(e, cvSrc);
+          zoomAt(view, p.x, p.y, Math.exp(-e.deltaY * 0.0012));
+          renderSource();
+          updateStatus();
+        },
+        { passive: false },
+      );
+
+      /* ================================================================
+   EVENTS — template canvas
+   ================================================================ */
+      cvTmpl.addEventListener("contextmenu", (e) => e.preventDefault());
+      cvTmpl.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        cvTmpl.setPointerCapture(e.pointerId);
+        const p = evPos(e, cvTmpl);
+        if (e.button === 1 || S.space) {
+          ptrT = { kind: "pan", x: p.x, y: p.y, vx: tpv.x, vy: tpv.y };
+          return;
+        }
+        if (e.button === 0) {
+          if (tp.tool === "fill") {
+            const cell = cellAtT(...toWorldT(p));
+            if (fillT(cell.c, cell.r)) {
+              pushTUndo();
+              renderTemplate();
+              updateTInfo();
+              toast("Zona diisi");
+            } else toast("Zona sudah berisi material ini", "warn");
+            return;
+          }
+          ptrT = { kind: "paint" };
+          applyTStroke(p);
+        } else if (e.button === 2) {
+          ptrT = { kind: "erase" };
+          applyTStroke(p);
+        }
+      });
+      cvTmpl.addEventListener("pointermove", (e) => {
+        const p = evPos(e, cvTmpl);
+        tp.mouse = p;
+        if (ptrT && ptrT.kind === "pan") {
+          tpv.x = ptrT.vx + (p.x - ptrT.x);
+          tpv.y = ptrT.vy + (p.y - ptrT.y);
+          tp.moved = true;
+          renderTemplate();
+          updateStatus();
+          return;
+        }
+        tp.hover = cellAtT(...toWorldT(p));
+        if (ptrT && (ptrT.kind === "paint" || ptrT.kind === "erase"))
+          applyTStroke(p);
+        renderTemplate();
+        updateStatus();
+      });
+      cvTmpl.addEventListener("pointerup", () => (ptrT = null));
+      cvTmpl.addEventListener("pointercancel", () => (ptrT = null));
+      cvTmpl.addEventListener("pointerleave", () => {
+        if (!ptrT) {
+          tp.mouse = null;
+          tp.hover = null;
+          renderTemplate();
+          updateStatus();
+        }
+      });
+      cvTmpl.addEventListener(
+        "wheel",
+        (e) => {
+          e.preventDefault();
+          const p = evPos(e, cvTmpl);
+          zoomAt(tpv, p.x, p.y, Math.exp(-e.deltaY * 0.0012));
+          renderTemplate();
+          updateStatus();
+        },
+        { passive: false },
+      );
+
+      /* ================================================================
+   EVENTS — inspect canvas
+   ================================================================ */
+      cvPrev.addEventListener("contextmenu", (e) => e.preventDefault());
+      function applyPreviewStroke(p) {
+        const cell = cellAtP(...toWorldP(p));
+        if (ptrP.kind === "paint") {
+          if (canPaint(cell.c, cell.r)) {
+            if (!ptrP.pushed) {
+              pushUndo();
+              ptrP.pushed = true;
+            }
+            paintCell(cell.c, cell.r);
+          }
+        } else if (canErase(cell.c, cell.r)) {
+          if (!ptrP.pushed) {
+            pushUndo();
+            ptrP.pushed = true;
+          }
+          eraseCell(cell.c, cell.r);
+        }
+      }
+      cvPrev.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        cvPrev.setPointerCapture(e.pointerId);
+        const p = evPos(e, cvPrev);
+        if (e.button === 1 || S.space) {
+          ptrP = { kind: "pan", x: p.x, y: p.y, vx: pv.x, vy: pv.y };
+          return;
+        }
+        if (e.button === 0) {
+          ptrP = { kind: pv.tool === "brush" ? "paint" : "erase" };
+          applyPreviewStroke(p);
+        } else if (e.button === 2) {
+          ptrP = { kind: "erase" };
+          applyPreviewStroke(p);
+        }
+      });
+      cvPrev.addEventListener("pointermove", (e) => {
+        const p = evPos(e, cvPrev);
+        pv.mouse = p;
+        if (ptrP && ptrP.kind === "pan") {
+          pv.x = ptrP.vx + (p.x - ptrP.x);
+          pv.y = ptrP.vy + (p.y - ptrP.y);
+          pv.moved = true;
+          renderPreview();
+          updateStatus();
+          return;
+        }
+        pv.hover = cellAtP(...toWorldP(p));
+        if (ptrP && (ptrP.kind === "paint" || ptrP.kind === "erase"))
+          applyPreviewStroke(p);
+        renderPreview();
+        updateStatus();
+      });
+      cvPrev.addEventListener("pointerup", () => (ptrP = null));
+      cvPrev.addEventListener("pointercancel", () => (ptrP = null));
+      cvPrev.addEventListener("pointerleave", () => {
+        if (!ptrP) {
+          pv.mouse = null;
+          pv.hover = null;
+          renderPreview();
+          updateStatus();
+        }
+      });
+      cvPrev.addEventListener(
+        "wheel",
+        (e) => {
+          e.preventDefault();
+          const p = evPos(e, cvPrev);
+          zoomAt(pv, p.x, p.y, Math.exp(-e.deltaY * 0.0012));
+          renderPreview();
+          updateStatus();
+        },
+        { passive: false },
+      );
+
+      /* ================================================================
+   TOOLS, MODE, HINTS, STATUS
+   ================================================================ */
+      const HINTS = {
+        hand: "Drag untuk pan · scroll untuk zoom · 0 = fit · G = grid",
+        calib:
+          "Klik 4 vertex SATU diamond: atas → kanan → bawah → kiri · Esc = batal",
+        select:
+          "Klik = toggle cell · drag = marquee · Enter = crop selection · Esc = clear",
+        tile: "Klik diamond untuk crop tile → langsung masuk library",
+        patch:
+          "Drag dari satu diamond ke diamond lain untuk mengambil patch besar · Esc = batal",
+        origin: "Klik pada gambar untuk memindahkan origin grid",
+        tpaint:
+          "Klik / drag cell untuk mengisi material aktif · klik kanan = kosongkan",
+        terase: "Klik / drag cell untuk mengosongkan zona",
+        tfill:
+          "Klik satu zona untuk mengganti seluruh zona menjadi material aktif",
+        brush:
+          "Klik / drag untuk melukis · klik kanan = hapus · tahan Spasi untuk pan",
+        erase: "Klik / drag untuk menghapus tile dari preview",
+      };
+      function setHint() {
+        const map = {
+          source: HINTS[S.tool],
+          template: HINTS["t" + tp.tool],
+          inspect: HINTS[pv.tool],
+        };
+        stHint.textContent = map[S.mode];
+      }
+      function updateStatus() {
+        if (S.mode === "template") {
+          stImg.textContent = `${tp.W}×${tp.H}`;
+          const wd = tp.mouse ? toWorldT(tp.mouse) : null;
+          stCur.textContent = wd
+            ? `${Math.round(wd[0])}, ${Math.round(wd[1])}`
+            : "—";
+          stCell.textContent = tp.hover ? `${tp.hover.c},${tp.hover.r}` : "—";
+          stZoom.textContent = Math.round(tpv.scale * 100) + "%";
+          stGrid.textContent = `${tp.dw}×${tp.dh}`;
+          return;
+        }
+        stImg.textContent = S.img ? `${S.iw}×${S.ih}` : "—";
+        if (S.mode === "source") {
+          const wd = S.mouse ? toWorld(S.mouse) : null;
+          stCur.textContent = wd
+            ? `${Math.round(wd[0])}, ${Math.round(wd[1])}`
+            : "—";
+          stCell.textContent = S.hoverCell
+            ? `${S.hoverCell.c},${S.hoverCell.r}`
+            : "—";
+          stZoom.textContent = Math.round(view.scale * 100) + "%";
+          stGrid.textContent = `${S.grid.w}×${S.grid.h}`;
+        } else {
+          const wd = pv.mouse ? toWorldP(pv.mouse) : null;
+          stCur.textContent = wd
+            ? `${Math.round(wd[0])}, ${Math.round(wd[1])}`
+            : "—";
+          stCell.textContent = pv.hover ? `${pv.hover.c},${pv.hover.r}` : "—";
+          stZoom.textContent = Math.round(pv.scale * 100) + "%";
+          stGrid.textContent = `out ${S.out.w}×${S.out.h}`;
+        }
+      }
+      function setTool(t) {
+        S.tool = t;
+        patchSel = null;
+        S.hoverCell = null;
+        $$("#toolbar [data-tool]").forEach((b) =>
+          b.classList.toggle("on", b.dataset.tool === t),
+        );
+        cvSrc.style.cursor = t === "hand" ? "grab" : "crosshair";
+        setHint();
+        updateLive();
+        renderSource();
+      }
+      function setPTool(t) {
+        pv.tool = t;
+        $$("#toolbar [data-ptool]").forEach((b) =>
+          b.classList.toggle("on", b.dataset.ptool === t),
+        );
+        setHint();
+        renderPreview();
+      }
+      function setTTool(t) {
+        tp.tool = t;
+        $$("#toolbar [data-ttool]").forEach((b) =>
+          b.classList.toggle("on", b.dataset.ttool === t),
+        );
+        setHint();
+      }
+      function setMode(m) {
+        S.mode = m;
+        document.body.className = "mode-" + m;
+        $("#modeSource").classList.toggle("on", m === "source");
+        $("#modeTemplate").classList.toggle("on", m === "template");
+        $("#modeInspect").classList.toggle("on", m === "inspect");
+        cvSrc.classList.toggle("hidden", m !== "source");
+        cvTmpl.classList.toggle("hidden", m !== "template");
+        cvPrev.classList.toggle("hidden", m !== "inspect");
+        if (m === "inspect") {
+          if (!pvFitted) {
+            fitPreview();
+            pvFitted = true;
+          }
+          renderPreview();
+          updateInspectPanels();
+        } else if (m === "template") {
+          if (!tpFitted) {
+            fitTemplate();
+            tpFitted = true;
+          }
+          renderTemplate();
+        } else renderSource();
+        updateStatus();
+        setHint();
+        updatePrevEmpty();
+      }
+
+      /* ================================================================
+   INSPECTOR BINDINGS — source
+   ================================================================ */
+      function syncInputs() {
+        $("#inGW").value = S.grid.w;
+        $("#inGH").value = S.grid.h;
+        $("#inOX").value = Math.round(S.grid.ox);
+        $("#inOY").value = Math.round(S.grid.oy);
+        $("#inOW").value = S.out.w;
+        $("#inOH").value = S.out.h;
+        $("#inPCols").value = pv.cols;
+        $("#inPRows").value = pv.rows;
+        updateRatioWarn();
+      }
+      function updateRatioWarn() {
+        const off = Math.abs(S.grid.w / S.grid.h - 2) > 0.02;
+        $("#ratioWarn").hidden = !off;
+        if (off)
+          $("#ratioWarn").textContent =
+            `Rasio source diamond ${(S.grid.w / S.grid.h).toFixed(2)}:1 — bukan 2:1. Jika dipaksa ke output, bentuk akan terdistorsi.`;
+      }
+      function syncProcInputs() {
+        $$("#segBg button").forEach((b) =>
+          b.classList.toggle("on", b.dataset.v === S.proc.bg),
+        );
+        $("#inBgTol").value = S.proc.tol;
+        $("#inATh").value = S.proc.ath;
+        $("#inBinA").checked = S.proc.bin;
+      }
+      const num = (el, fallback) => {
+        const v = parseInt(el.value, 10);
+        return isNaN(v) ? fallback : v;
+      };
+
+      $("#inGW").addEventListener("change", () => {
+        S.grid.w = clamp(num($("#inGW"), S.grid.w), 4, 8192);
+        if (S.grid.lock) S.grid.h = Math.max(2, Math.round(S.grid.w / 2));
+        syncInputs();
+        renderSource();
+        updateLive();
+        updateStatus();
+        updateInspectPanels();
+      });
+      $("#inGH").addEventListener("change", () => {
+        S.grid.h = clamp(num($("#inGH"), S.grid.h), 2, 8192);
+        if (S.grid.lock) S.grid.w = S.grid.h * 2;
+        syncInputs();
+        renderSource();
+        updateLive();
+        updateStatus();
+        updateInspectPanels();
+      });
+      $("#inLock").addEventListener("change", (e) => {
+        S.grid.lock = e.target.checked;
+        if (S.grid.lock) S.grid.h = Math.max(2, Math.round(S.grid.w / 2));
+        syncInputs();
+        renderSource();
+      });
+      $$(".chip[data-gw]").forEach((ch) =>
+        ch.addEventListener("click", () => {
+          S.grid.w = +ch.dataset.gw;
+          S.grid.h = +ch.dataset.gh;
+          syncInputs();
+          renderSource();
+          updateLive();
+          updateStatus();
+        }),
+      );
+      $("#inOX").addEventListener("change", () => {
+        S.grid.ox = num($("#inOX"), S.grid.ox);
+        renderSource();
+        updateLive();
+      });
+      $("#inOY").addEventListener("change", () => {
+        S.grid.oy = num($("#inOY"), S.grid.oy);
+        renderSource();
+        updateLive();
+      });
+      $("#btnCalib").addEventListener("click", () => setTool("calib"));
+      $("#btnCropSel").addEventListener("click", cropSelection);
+      $("#btnClearSel").addEventListener("click", () => {
+        S.sel.clear();
+        updateSelUI();
+        renderSource();
+      });
+
+      function applyOut() {
+        S.out.w = clamp(num($("#inOW"), S.out.w), 8, 1024);
+        S.out.h = clamp(num($("#inOH"), S.out.h), 4, 1024);
+        syncInputs();
+        retileTiles();
+        if (S.mode === "inspect") {
+          fitPreview();
+          renderPreview();
+        }
+        updateLive();
+        renderSource();
+      }
+      $("#inOW").addEventListener("change", applyOut);
+      $("#inOH").addEventListener("change", applyOut);
+      $$(".chip[data-ow]").forEach((ch) =>
+        ch.addEventListener("click", () => {
+          $("#inOW").value = ch.dataset.ow;
+          $("#inOH").value = ch.dataset.oh;
+          applyOut();
+        }),
+      );
+      $$("#segResample button").forEach((b) =>
+        b.addEventListener("click", () => {
+          S.out.resample = b.dataset.v;
+          $$("#segResample button").forEach((x) =>
+            x.classList.toggle("on", x === b),
+          );
+          retileTiles();
+          updateLive();
+        }),
+      );
+      $$("#segBg button").forEach((b) =>
+        b.addEventListener("click", () => {
+          S.proc.bg = b.dataset.v;
+          syncProcInputs();
+          retileTiles();
+          updateLive();
+        }),
+      );
+      $("#inBgTol").addEventListener("change", () => {
+        S.proc.tol = clamp(num($("#inBgTol"), S.proc.tol), 0, 128);
+        syncProcInputs();
+        retileTiles();
+        updateLive();
+      });
+      $("#inATh").addEventListener("change", () => {
+        S.proc.ath = clamp(num($("#inATh"), S.proc.ath), 0, 254);
+        syncProcInputs();
+        retileTiles();
+        updateLive();
+      });
+      $("#inBinA").addEventListener("change", (e) => {
+        S.proc.bin = e.target.checked;
+        retileTiles();
+        updateLive();
+      });
+      $("#btnManifest").addEventListener("click", () =>
+        $("#manifestInput").click(),
+      );
+      $("#manifestInput").addEventListener("change", (e) => {
+        const f = e.target.files[0];
+        e.target.value = "";
+        if (!f) return;
+        f.text().then((t) => {
+          try {
+            importManifestJson(JSON.parse(t));
+          } catch (err) {
+            toast("Manifest tidak valid.", "warn");
+          }
+        });
+      });
+
+      /* ================================================================
+   INSPECTOR BINDINGS — inspect
+   ================================================================ */
+      $("#inPCols").addEventListener("change", () => {
+        pv.cols = clamp(num($("#inPCols"), pv.cols), 2, 40);
+        prunePreview();
+      });
+      $("#inPRows").addEventListener("change", () => {
+        pv.rows = clamp(num($("#inPRows"), pv.rows), 2, 40);
+        prunePreview();
+      });
+      function prunePreview() {
+        let willChange = false;
+        for (const [k, e] of pv.map) {
+          const i = k.indexOf(","),
+            c = +k.slice(0, i),
+            r = +k.slice(i + 1);
+          if (c + e.wc > pv.cols || r + e.hc > pv.rows) {
+            willChange = true;
+            break;
+          }
+        }
+        if (willChange) {
+          pushUndo();
+          for (const [k, e] of [...pv.map]) {
+            const i = k.indexOf(","),
+              c = +k.slice(0, i),
+              r = +k.slice(i + 1);
+            if (c + e.wc > pv.cols || r + e.hc > pv.rows) pv.map.delete(k);
+          }
+        }
+        syncInputs();
+        if (S.mode === "inspect") {
+          fitPreview();
+          renderPreview();
+        }
+      }
+      $("#inPGrid").addEventListener("change", (e) => {
+        pv.showGrid = e.target.checked;
+        renderPreview();
+      });
+      $$("#segSeam button").forEach((b) =>
+        b.addEventListener("click", () => {
+          seamN = +b.dataset.n;
+          $$("#segSeam button").forEach((x) =>
+            x.classList.toggle("on", x === b),
+          );
+          renderSeamless();
+        }),
+      );
+      $$("#segPix button").forEach((b) =>
+        b.addEventListener("click", () => {
+          pixZ = +b.dataset.z;
+          $$("#segPix button").forEach((x) =>
+            x.classList.toggle("on", x === b),
+          );
+          renderPixelZoom();
+        }),
+      );
+
+      /* ================================================================
+   INSPECTOR BINDINGS — template
+   ================================================================ */
+      $$("#segTPreset button").forEach((b) =>
+        b.addEventListener("click", () => {
+          tp.W = +b.dataset.w;
+          tp.H = +b.dataset.h;
+          $("#inTW").value = tp.W;
+          $("#inTH").value = tp.H;
+          autoDiamond();
+          updateTInfo();
+          fitTemplate();
+          renderTemplate();
+          updateStatus();
+        }),
+      );
+      function onTCanvasSize() {
+        tp.W = clamp(num($("#inTW"), tp.W), 256, 4096);
+        tp.H = clamp(num($("#inTH"), tp.H), 256, 4096);
+        autoDiamond();
+        updateTInfo();
+        fitTemplate();
+        renderTemplate();
+        updateStatus();
+      }
+      $("#inTW").addEventListener("change", onTCanvasSize);
+      $("#inTH").addEventListener("change", onTCanvasSize);
+      function onTGrid() {
+        tp.cols = clamp(num($("#inTCols"), tp.cols), 2, 24);
+        tp.rows = clamp(num($("#inTRows"), tp.rows), 2, 24);
+        autoDiamond();
+        pruneTMap();
+        updateTInfo();
+        fitTemplate();
+        renderTemplate();
+        updateStatus();
+      }
+      $("#inTCols").addEventListener("change", onTGrid);
+      $("#inTRows").addEventListener("change", onTGrid);
+      $("#inTDH").addEventListener("change", () => {
+        tp.dh = clamp(num($("#inTDH"), tp.dh), 4, 512);
+        updateTGeom();
+        updateTInfo();
+        fitTemplate();
+        renderTemplate();
+        updateStatus();
+      });
+      $$("#segTLayout button").forEach((b) =>
+        b.addEventListener("click", () => {
+          $$("#segTLayout button").forEach((x) =>
+            x.classList.toggle("on", x === b),
+          );
+          applyTLayout(b.dataset.l);
+        }),
+      );
+      $("#tPalette").addEventListener("click", (e) => {
+        const b = e.target.closest(".swatch");
+        if (!b) return;
+        tp.mat = b.dataset.m;
+        if (tp.tool === "erase" || tp.tool === "fill") setTTool("paint");
+        renderTPalette();
+        setHint();
+      });
+      $("#inTLabels").addEventListener("change", (e) => {
+        tp.labels = e.target.checked;
+        renderTemplate();
+      });
+      $("#inTBorders").addEventListener("change", (e) => {
+        tp.borders = e.target.checked;
+        renderTemplate();
+      });
+      $("#btnExportZones").addEventListener("click", () => {
+        canvasBlob(buildTemplateImage("zones")).then((b) =>
+          download(b, `zone_map_${tp.W}x${tp.H}.png`),
+        );
+        toast("zone_map.png didownload");
+      });
+      $("#btnExportLines").addEventListener("click", () => {
+        canvasBlob(buildTemplateImage("lines")).then((b) =>
+          download(b, `grid_lines_${tp.W}x${tp.H}.png`),
+        );
+        toast("grid_lines.png didownload");
+      });
+      $("#btnCopyPZ").addEventListener("click", () =>
+        copyText(buildTemplatePrompt("zones")),
+      );
+      $("#btnCopyPL").addEventListener("click", () =>
+        copyText(buildTemplatePrompt("lines")),
+      );
+      $("#btnExportTemplate").addEventListener("click", exportTemplateAll);
+      $("#btnGenPrompt").addEventListener("click", () => {
+        $("#pmOut").value = buildMaterialPrompt();
+      });
+      $("#btnCopyPM").addEventListener("click", () => {
+        if (!$("#pmOut").value) $("#pmOut").value = buildMaterialPrompt();
+        copyText($("#pmOut").value);
+      });
+      $("#btnDlPM").addEventListener("click", () => {
+        if (!$("#pmOut").value) $("#pmOut").value = buildMaterialPrompt();
+        download(
+          new Blob([$("#pmOut").value], { type: "text/plain" }),
+          "material_prompt.txt",
+        );
+        toast("material_prompt.txt didownload");
+      });
+
+      /* ================================================================
+   TOOLBAR / HEADER BINDINGS
+   ================================================================ */
+      $$("#toolbar [data-tool]").forEach((b) =>
+        b.addEventListener("click", () => setTool(b.dataset.tool)),
+      );
+      $$("#toolbar [data-ptool]").forEach((b) =>
+        b.addEventListener("click", () => setPTool(b.dataset.ptool)),
+      );
+      $$("#toolbar [data-ttool]").forEach((b) =>
+        b.addEventListener("click", () => setTTool(b.dataset.ttool)),
+      );
+      $("#tbZoomIn").addEventListener("click", () => zoomCenter(1.35));
+      $("#tbZoomOut").addEventListener("click", () => zoomCenter(1 / 1.35));
+      $("#tbFit").addEventListener("click", () => {
+        if (S.mode === "source") {
+          fitView();
+          renderSource();
+        } else if (S.mode === "inspect") {
+          fitPreview();
+          renderPreview();
+        } else {
+          fitTemplate();
+          renderTemplate();
+        }
+        updateStatus();
+      });
+      $("#tbGrid").addEventListener("click", () => {
+        S.grid.show = !S.grid.show;
+        $("#tbGrid").classList.toggle("on", S.grid.show);
+        renderSource();
+      });
+      $("#tbUndo").addEventListener("click", doUndo);
+      $("#tbRedo").addEventListener("click", doRedo);
+      $("#tbClear").addEventListener("click", () => {
+        if (!pv.map.size) return;
+        pushUndo();
+        pv.map.clear();
+        renderPreview();
+        toast("Preview dibersihkan — Ctrl+Z untuk undo");
+      });
+      $("#tbTUndo").addEventListener("click", doTUndo);
+      $("#tbTRedo").addEventListener("click", doTRedo);
+      $("#tbTClear").addEventListener("click", () => {
+        if (!tp.map.size) return;
+        pushTUndo();
+        tp.map.clear();
+        renderTemplate();
+        updateTInfo();
+        toast("Zona dikosongkan — Ctrl+Z untuk undo");
+      });
+      $("#modeSource").addEventListener("click", () => setMode("source"));
+      $("#modeTemplate").addEventListener("click", () => setMode("template"));
+      $("#modeInspect").addEventListener("click", () => setMode("inspect"));
+      $("#btnNew").addEventListener("click", newProject);
+      $("#btnOpen").addEventListener("click", () => $("#projInput").click());
+      $("#btnSave").addEventListener("click", saveProject);
+      $("#btnImport").addEventListener("click", () => $("#fileInput").click());
+      $("#btnSample").addEventListener("click", loadSample);
+      $("#btnExport").addEventListener("click", exportAll);
+      $("#btnPrevPng").addEventListener("click", () => {
+        if (!pv.map.size) {
+          toast("Preview masih kosong.", "warn");
+          return;
+        }
+        canvasBlob(buildPreviewPng()).then((b) =>
+          download(b, "ground_preview.png"),
+        );
+        toast("ground_preview.png didownload");
+      });
+      $("#fileInput").addEventListener("change", (e) => {
+        loadFile(e.target.files[0]);
+        e.target.value = "";
+      });
+      $("#projInput").addEventListener("change", (e) => {
+        const f = e.target.files[0];
+        e.target.value = "";
+        if (!f) return;
+        f.text().then((t) => {
+          try {
+            const j = JSON.parse(t);
+            if (j.grid && j.grid.diamond_w && !j.source) importManifestJson(j);
+            else loadProject(j);
+          } catch (err) {
+            toast("File JSON tidak valid.", "warn");
+          }
+        });
+      });
+      $("#dzPick").addEventListener("click", (e) => {
+        e.stopPropagation();
+        $("#fileInput").click();
+      });
+      $("#dzSample").addEventListener("click", (e) => {
+        e.stopPropagation();
+        loadSample();
+      });
+      $("#dropzone").addEventListener("click", () => $("#fileInput").click());
+
+      /* drag & drop */
+      ["dragenter", "dragover"].forEach((ev) =>
+        window.addEventListener(ev, (e) => {
+          e.preventDefault();
+          $("#stage").classList.add("drag");
+        }),
+      );
+      window.addEventListener("dragleave", (e) => {
+        if (!e.relatedTarget) $("#stage").classList.remove("drag");
+      });
+      window.addEventListener("drop", (e) => {
+        e.preventDefault();
+        $("#stage").classList.remove("drag");
+        loadFile(e.dataTransfer.files[0]);
+      });
+
+      /* keyboard */
+      window.addEventListener("keydown", (e) => {
+        if (e.target.closest("input,textarea,select")) return;
+        const k = e.key.toLowerCase();
+        if (e.code === "Space") {
+          S.space = true;
+          e.preventDefault();
+          return;
+        }
+        if (S.mode === "source") {
+          if (k === "v") setTool("hand");
+          else if (k === "c") setTool("calib");
+          else if (k === "s") setTool("select");
+          else if (k === "t") setTool("tile");
+          else if (k === "p") setTool("patch");
+          else if (k === "o") setTool("origin");
+          else if (k === "g") $("#tbGrid").click();
+          else if (k === "0") {
+            fitView();
+            renderSource();
+            updateStatus();
+          } else if (k === "+" || k === "=") zoomCenter(1.35);
+          else if (k === "-") zoomCenter(1 / 1.35);
+          else if (k === "enter" && S.sel.size) cropSelection();
+          else if (k === "escape") {
+            if (patchSel) {
+              patchSel = null;
+              renderSource();
+              updateLive();
+            } else if (S.calib.pts.length) {
+              S.calib.pts = [];
+              renderSource();
+            } else if (S.sel.size) {
+              S.sel.clear();
+              updateSelUI();
+              renderSource();
+            }
+          }
+        } else if (S.mode === "template") {
+          if ((e.ctrlKey || e.metaKey) && k === "z") {
+            e.preventDefault();
+            e.shiftKey ? doTRedo() : doTUndo();
+          } else if ((e.ctrlKey || e.metaKey) && k === "y") {
+            e.preventDefault();
+            doTRedo();
+          } else if (k === "b") setTTool("paint");
+          else if (k === "e") setTTool("erase");
+          else if (k === "f") setTTool("fill");
+          else if (k === "0") {
+            fitTemplate();
+            renderTemplate();
+            updateStatus();
+          } else if (k === "+" || k === "=") zoomCenter(1.35);
+          else if (k === "-") zoomCenter(1 / 1.35);
+        } else {
+          if ((e.ctrlKey || e.metaKey) && k === "z") {
+            e.preventDefault();
+            e.shiftKey ? doRedo() : doUndo();
+          } else if ((e.ctrlKey || e.metaKey) && k === "y") {
+            e.preventDefault();
+            doRedo();
+          } else if (k === "b") setPTool("brush");
+          else if (k === "e") setPTool("erase");
+        }
+      });
+      window.addEventListener("keyup", (e) => {
+        if (e.code === "Space") S.space = false;
+      });
+      window.addEventListener("blur", () => {
+        S.space = false;
+      });
+
+      /* resize */
+      new ResizeObserver(() => {
+        if (S.mode === "source") {
+          if (S.img && !view.moved) fitView();
+          renderSource();
+        } else if (S.mode === "inspect") {
+          if (!pv.moved) fitPreview();
+          renderPreview();
+        } else {
+          if (!tp.moved) fitTemplate();
+          renderTemplate();
+        }
+      }).observe($("#stage"));
+
+      /* ================================================================
+   INIT
+   ================================================================ */
+      refreshIcons();
+      renderLibrary();
+      updateBrushBox();
+      renderTPalette();
+      autoDiamond();
+      applyTLayout("garden");
+      updateTInfo();
+      syncProcInputs();
+      updateSelUI();
+      setHint();
+      updateStatus();
+      renderSource();
+      updatePrevEmpty();
+      updateInspectPanels();
+      requestAnimationFrame(() => setTimeout(loadSample, 60));
+    </script>
+  </body>
+</html>
